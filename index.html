@@ -1,0 +1,962 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E6B58">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+<title>Personal Balance Sheet</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap">
+<style>
+/* Layout: one calm column (max 1120px), sticky header with tabs; a ledger-style statement is the centrepiece of the overview. */
+:root {
+  --bg: #F5F7F6;
+  --surface: #FFFFFF;
+  --sunken: #EEF2F0;
+  --ink: #15201C;
+  --muted: #5D6B66;
+  --line: #DDE3E0;
+  --accent: #0E6B58;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #E1EFEA;
+  --good: #23784A; --good-soft: #E2F1E8;
+  --warn: #9A6410; --warn-soft: #F7EEDC;
+  --bad: #B23A2C;  --bad-soft: #F8E5E1;
+  --c-liquid: #3F7FCC;
+  --c-invest: #0E6B58;
+  --c-personal: #B8925A;
+  --c-debt: #C0614B;
+  --font: "IBM Plex Sans Thai", "Noto Sans Thai", "Leelawadee UI", Tahoma, system-ui, sans-serif;
+  --r: 10px;
+  --shadow: 0 1px 2px rgba(20,32,28,.06), 0 4px 16px rgba(20,32,28,.05);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0E1412; --surface: #151D1A; --sunken: #111816; --ink: #E5ECE9; --muted: #92A29C; --line: #26322E;
+  --accent: #4CBFA3; --accent-ink: #06231C; --accent-soft: #173029;
+  --good: #5CC48C; --good-soft: #15291F; --warn: #E3B14F; --warn-soft: #2C2414; --bad: #F07B6A; --bad-soft: #321A16;
+  --c-liquid: #6FA6EA; --c-invest: #4CBFA3; --c-personal: #D8B47D; --c-debt: #E38A74;
+  --shadow: 0 1px 2px rgba(0,0,0,.3); color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0E1412; --surface: #151D1A; --sunken: #111816; --ink: #E5ECE9; --muted: #92A29C; --line: #26322E;
+  --accent: #4CBFA3; --accent-ink: #06231C; --accent-soft: #173029;
+  --good: #5CC48C; --good-soft: #15291F; --warn: #E3B14F; --warn-soft: #2C2414; --bad: #F07B6A; --bad-soft: #321A16;
+  --c-liquid: #6FA6EA; --c-invest: #4CBFA3; --c-personal: #D8B47D; --c-debt: #E38A74;
+  --shadow: 0 1px 2px rgba(0,0,0,.3); color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--surface); }
+.num, .amt, td.n { font-variant-numeric: tabular-nums; }
+h1, h2, h3 { text-wrap: balance; margin: 0; line-height: 1.3; }
+h2 { font-size: 1.15rem; font-weight: 600; }
+h3 { font-size: .95rem; font-weight: 600; }
+p { margin: 0; }
+a { color: var(--accent); }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+
+.wrap { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+/* Header */
+header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--surface); border-bottom: 1px solid var(--line); }
+.top-row { display: flex; align-items: center; gap: 12px; padding-block: 12px 6px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 10px; margin-right: auto; min-width: 0; }
+.mark { width: 28px; height: 28px; border-radius: 7px; background: var(--accent); display: grid; place-items: center; flex: none; }
+.mark svg { display: block; }
+.brand h1 { font-size: 1.02rem; font-weight: 600; }
+.brand small { display: block; color: var(--muted); font-size: .76rem; line-height: 1.2; }
+.ctrls { display: flex; gap: 8px; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 2px; background: var(--sunken); }
+.seg button { border: 0; background: transparent; padding: 3px 12px; border-radius: 999px; cursor: pointer; font-size: .82rem; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); font-weight: 500; }
+.iconbtn { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 12px; cursor: pointer; font-size: .82rem; }
+.iconbtn:hover { border-color: var(--muted); }
+nav.tabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; margin-bottom: -1px; }
+nav.tabs::-webkit-scrollbar { display: none; }
+nav.tabs button { flex: none; border: 0; background: none; padding: 8px 12px 10px; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; font-size: .9rem; white-space: nowrap; }
+nav.tabs button:hover { color: var(--ink); }
+nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); font-weight: 500; }
+
+main { padding-block: 20px 64px; display: grid; gap: 20px; }
+.banner { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; background: var(--accent-soft); border-radius: var(--r); padding: 10px 14px; font-size: .9rem; }
+.banner p { flex: 1 1 260px; min-width: 0; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; min-width: 0; }
+.card-h { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.sub { color: var(--muted); font-size: .85rem; }
+.eyebrow { font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+.grid { display: grid; gap: 20px; }
+.g2 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); }
+.g3 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+
+/* KPI tiles */
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 820px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; display: grid; gap: 2px; min-width: 0; }
+.kpi .v { font-size: clamp(1.15rem, 2.6vw, 1.55rem); font-weight: 600; letter-spacing: -.01em; overflow-wrap: anywhere; }
+.kpi .d { font-size: .8rem; color: var(--muted); }
+.kpi.nw { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.kpi.nw .eyebrow, .kpi.nw .d { color: inherit; opacity: .82; }
+
+/* Statement */
+.stmt { display: grid; grid-template-columns: 1fr 1fr; gap: 0 28px; }
+@media (max-width: 760px) { .stmt { grid-template-columns: 1fr; gap: 18px; } }
+.stmt table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.stmt th { text-align: left; font-weight: 600; padding: 6px 0; font-size: .82rem; color: var(--muted); }
+.stmt td { padding: 5px 0; border-bottom: 1px dashed var(--line); vertical-align: top; }
+.stmt td.n { text-align: right; white-space: nowrap; padding-left: 12px; }
+.stmt td.p { text-align: right; color: var(--muted); width: 3.5em; font-size: .8rem; padding-left: 8px; }
+.stmt tr.grp td { border-bottom: 0; padding-top: 12px; font-weight: 600; }
+.stmt tr.grp td:first-child::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 8px; background: var(--dot, var(--muted)); vertical-align: 1px; }
+.stmt tr.item td:first-child { padding-left: 16px; }
+.stmt tr.subt td { border-bottom: 0; color: var(--muted); font-size: .82rem; }
+.stmt tr.total td { border-top: 2px solid var(--ink); border-bottom: 0; font-weight: 700; padding-top: 8px; }
+.stmt tr.dbl td { border-bottom: 3px double var(--ink); }
+.stmt-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 8px; }
+.check { margin-top: 14px; font-size: .82rem; color: var(--muted); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.check b { color: var(--good); }
+
+/* Balance bars */
+.bal { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; height: 220px; align-items: end; }
+.bal > div { height: 100%; min-height: 0; }
+.bal .col { display: flex; flex-direction: column; justify-content: flex-end; height: 100%; gap: 2px; }
+.bal .seg-b { border-radius: 4px; min-height: 2px; position: relative; display: flex; align-items: flex-end; padding: 4px 8px; color: #fff; font-size: .74rem; line-height: 1.2; overflow: hidden; }
+.bal .cap { text-align: center; font-size: .8rem; color: var(--muted); margin-top: 6px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .8rem; color: var(--muted); margin-top: 10px; }
+.legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; vertical-align: 0; }
+
+/* Donut */
+.alloc { display: grid; grid-template-columns: 170px 1fr; gap: 18px; align-items: center; }
+@media (max-width: 480px) { .alloc { grid-template-columns: 1fr; justify-items: center; } }
+.alloc ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; width: 100%; min-width: 0; }
+.alloc li { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; font-size: .85rem; }
+.bar { grid-column: 1 / -1; height: 5px; background: var(--sunken); border-radius: 3px; overflow: hidden; }
+.bar > span { display: block; height: 100%; border-radius: 3px; }
+
+/* Ratios */
+.ratios { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 12px; }
+.ratio { border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; display: grid; gap: 4px; background: var(--surface); }
+.ratio .top { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.ratio .val { font-size: 1.3rem; font-weight: 600; }
+.ratio .tgt { font-size: .78rem; color: var(--muted); }
+.pill { font-size: .72rem; padding: 1px 9px; border-radius: 999px; font-weight: 500; white-space: nowrap; }
+.pill.good { background: var(--good-soft); color: var(--good); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.bad { background: var(--bad-soft); color: var(--bad); }
+.pill.na, .pill.info { background: var(--sunken); color: var(--muted); }
+
+/* Suggestions */
+.sugs { display: grid; gap: 10px; }
+.sug { display: grid; grid-template-columns: 4px 1fr; gap: 12px; padding: 12px 14px 12px 0; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); overflow: hidden; }
+.sug::before { content: ""; background: var(--sev, var(--muted)); border-radius: 0 3px 3px 0; }
+.sug.bad { --sev: var(--bad); } .sug.warn { --sev: var(--warn); } .sug.good { --sev: var(--good); } .sug.info { --sev: var(--c-liquid); }
+.sug h3 { margin-bottom: 2px; }
+.sug p { font-size: .88rem; color: var(--muted); }
+
+/* Lists */
+.toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.btn { border: 1px solid var(--line); background: var(--surface); padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: .88rem; display: inline-flex; gap: 6px; align-items: center; }
+.btn:hover { border-color: var(--muted); }
+.btn.pri { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 500; }
+.btn.pri:hover { filter: brightness(1.06); }
+.btn.ghost { border-color: transparent; background: transparent; color: var(--muted); }
+.btn.danger { color: var(--bad); }
+.btn.danger.armed { background: var(--bad); color: #fff; border-color: var(--bad); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 12px; font-size: .82rem; cursor: pointer; }
+.chip:hover { border-color: var(--accent); color: var(--accent); }
+.list { display: grid; }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 16px; padding: 11px 4px; border-bottom: 1px solid var(--line); cursor: pointer; border-radius: 6px; }
+.row:hover { background: var(--sunken); }
+.row .nm { font-weight: 500; overflow-wrap: anywhere; }
+.row .meta { font-size: .8rem; color: var(--muted); overflow-wrap: anywhere; }
+.row .amt { text-align: right; font-weight: 600; white-space: nowrap; }
+.row .gl { text-align: right; font-size: .78rem; white-space: nowrap; }
+.up { color: var(--good); } .down { color: var(--bad); }
+.group-h { display: flex; justify-content: space-between; gap: 10px; padding: 14px 4px 6px; font-weight: 600; font-size: .9rem; border-bottom: 1px solid var(--line); }
+.group-h span:first-child::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 8px; background: var(--dot); vertical-align: 1px; }
+.empty { padding: 28px 12px; text-align: center; color: var(--muted); font-size: .9rem; display: grid; gap: 10px; justify-items: center; }
+
+/* Forms */
+.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 12px 14px; }
+.fld { display: grid; gap: 4px; min-width: 0; }
+.fld.wide { grid-column: 1 / -1; }
+.fld label { font-size: .8rem; color: var(--muted); font-weight: 500; }
+.fld .hint { font-size: .75rem; color: var(--muted); }
+input[type="text"], input[type="number"], input[type="date"], select, textarea {
+  width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 8px 10px; min-height: 40px;
+}
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+textarea { min-height: 120px; font-size: .78rem; font-family: ui-monospace, Menlo, Consolas, monospace; }
+input[type="number"] { font-variant-numeric: tabular-nums; }
+
+.sheet { position: fixed; inset: 0; z-index: 50; background: rgba(10,18,15,.45); display: grid; place-items: center; padding: 16px; padding-top: max(16px, env(safe-area-inset-top, 0px)); padding-bottom: max(16px, env(safe-area-inset-bottom, 0px)); }
+.sheet-card { background: var(--surface); border-radius: 14px; width: min(640px, 100%); max-height: 100%; overflow: auto; padding: 20px; box-shadow: 0 20px 60px rgba(0,0,0,.25); display: grid; gap: 16px; }
+@media (max-width: 560px) { .sheet { place-items: end stretch; padding: 0; } .sheet-card { border-radius: 16px 16px 0 0; max-height: 92%; padding-bottom: max(20px, env(safe-area-inset-bottom, 0px)); } }
+.sheet-foot { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+.sheet-foot .spacer { margin-right: auto; }
+
+/* Learn */
+.learn { display: grid; gap: 20px; }
+.prose { max-width: 70ch; display: grid; gap: 10px; }
+.prose p, .prose li { color: var(--ink); }
+.prose ul { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }
+.eq { display: flex; align-items: stretch; gap: 10px; flex-wrap: wrap; font-weight: 600; }
+.eq > div { border-radius: var(--r); padding: 14px 16px; flex: 1 1 140px; display: grid; gap: 2px; }
+.eq small { font-weight: 400; font-size: .8rem; opacity: .85; }
+.eq .op { flex: 0 0 auto; display: grid; place-items: center; font-size: 1.4rem; color: var(--muted); padding: 0 2px; }
+table.ref { width: 100%; border-collapse: collapse; font-size: .88rem; min-width: 560px; }
+table.ref th, table.ref td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.ref th { font-size: .78rem; color: var(--muted); font-weight: 500; }
+.scroll { overflow-x: auto; }
+
+.goal { display: grid; gap: 6px; padding: 12px 4px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.goal:hover { background: var(--sunken); }
+.goal .line { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.big { font-size: 1.6rem; font-weight: 600; letter-spacing: -.01em; }
+.kv { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 14px; font-size: .9rem; }
+.kv dt { color: var(--muted); } .kv dd { margin: 0; text-align: right; font-weight: 500; font-variant-numeric: tabular-nums; }
+.kv .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); }
+.note { font-size: .8rem; color: var(--muted); }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: max(20px, calc(env(safe-area-inset-bottom, 0px) + 12px)); background: var(--ink); color: var(--bg); padding: 8px 16px; border-radius: 999px; font-size: .85rem; z-index: 60; }
+svg text { fill: var(--muted); font-family: var(--font); }
+@media (prefers-reduced-motion: no-preference) { .bar > span, .bal .seg-b { transition: height .3s, width .3s; } }
+</style>
+
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="top-row">
+      <div class="brand">
+        <div class="mark" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16"><rect x="1" y="3" width="6" height="11" rx="1" fill="var(--accent-ink)"/><rect x="9" y="3" width="6" height="5" rx="1" fill="var(--accent-ink)" opacity=".6"/><rect x="9" y="9" width="6" height="5" rx="1" fill="var(--accent-ink)"/></svg></div>
+        <div><h1 id="appName">Personal Balance Sheet</h1><small id="appSub"></small></div>
+      </div>
+      <div class="ctrls">
+        <div class="seg" role="group" aria-label="Language">
+          <button type="button" id="langEn" data-act="lang" data-v="en">EN</button>
+          <button type="button" id="langTh" data-act="lang" data-v="th">ไทย</button>
+        </div>
+        <button type="button" class="iconbtn" id="settingsBtn" data-act="settings">Settings</button>
+      </div>
+    </div>
+    <nav class="tabs" id="tabs" role="tablist"></nav>
+  </div>
+</header>
+
+<div class="wrap"><main id="app"></main></div>
+<div class="sheet" id="sheet" hidden><div class="sheet-card" role="dialog" aria-modal="true" id="sheetCard"></div></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function () {
+'use strict';
+const KEY = 'personal-balance-sheet.v1';
+const TODAY = new Date().toISOString().slice(0, 10);
+const uid = () => Math.random().toString(36).slice(2, 10);
+const num = v => { const n = parseFloat(String(v ?? '').replace(/,/g, '')); return isFinite(n) ? n : 0; };
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+/* ---------- Categories ---------- */
+const GROUPS = {
+  liquid:   { c: 'var(--c-liquid)',   n: ['Liquid assets', 'สินทรัพย์สภาพคล่อง'], d: ['Cash or near-cash you can use within days', 'เงินสดหรือเทียบเท่าเงินสดที่ใช้ได้ทันที'] },
+  invest:   { c: 'var(--c-invest)',   n: ['Investment assets', 'สินทรัพย์เพื่อการลงทุน'], d: ['Held to grow wealth or produce income', 'ถือไว้เพื่อสร้างผลตอบแทนหรือรายได้'] },
+  personal: { c: 'var(--c-personal)', n: ['Personal-use assets', 'สินทรัพย์ใช้ส่วนตัว'], d: ['Things you use, usually not sold for income', 'ของที่ใช้ในชีวิตประจำวัน ไม่ได้มีไว้หารายได้'] },
+  short:    { c: 'var(--c-debt)',     n: ['Short-term liabilities', 'หนี้สินระยะสั้น'], d: ['Due within 12 months', 'ครบกำหนดชำระภายใน 1 ปี'] },
+  long:     { c: 'var(--c-debt)',     n: ['Long-term liabilities', 'หนี้สินระยะยาว'], d: ['Repaid over more than 12 months', 'ผ่อนชำระนานกว่า 1 ปี'] }
+};
+const ACATS = [
+  ['cash', 'liquid', 'Cash & bank deposits', 'เงินสดและเงินฝากออมทรัพย์'],
+  ['fixed', 'liquid', 'Fixed deposits', 'เงินฝากประจำ'],
+  ['mmf', 'liquid', 'Money market funds', 'กองทุนรวมตลาดเงิน'],
+  ['stock', 'invest', 'Stocks', 'หุ้น'],
+  ['fund', 'invest', 'Mutual funds & ETFs', 'กองทุนรวมและ ETF'],
+  ['bond', 'invest', 'Bonds & debentures', 'พันธบัตรและหุ้นกู้'],
+  ['retire', 'invest', 'Retirement funds (PVD, RMF, SSF, pension)', 'กองทุนเพื่อการเกษียณ (PVD, RMF, SSF, บำนาญ)'],
+  ['insure', 'invest', 'Life insurance cash value', 'มูลค่าเวนคืนกรมธรรม์ประกันชีวิต'],
+  ['gold', 'invest', 'Gold & commodities', 'ทองคำและสินค้าโภคภัณฑ์'],
+  ['crypto', 'invest', 'Crypto & digital assets', 'คริปโตและสินทรัพย์ดิจิทัล'],
+  ['property', 'invest', 'Investment property', 'อสังหาริมทรัพย์เพื่อการลงทุน'],
+  ['business', 'invest', 'Business ownership', 'ส่วนของเจ้าของในธุรกิจ'],
+  ['lent', 'invest', 'Money lent to others', 'เงินให้ผู้อื่นกู้ยืม'],
+  ['home', 'personal', 'Home you live in', 'บ้านหรือคอนโดที่อยู่อาศัย'],
+  ['vehicle', 'personal', 'Vehicles', 'ยานพาหนะ'],
+  ['belong', 'personal', 'Jewellery, belongings & collectibles', 'เครื่องประดับ ของใช้ และของสะสม'],
+  ['aother', 'personal', 'Other assets', 'สินทรัพย์อื่น']
+].map(([k, g, en, th]) => ({ k, g, n: [en, th] }));
+const LCATS = [
+  ['card', 'short', 'Credit cards', 'บัตรเครดิต'],
+  ['personal', 'short', 'Personal loans & cash cards', 'สินเชื่อส่วนบุคคลและบัตรกดเงินสด'],
+  ['family', 'short', 'Loans from family or friends', 'เงินยืมจากครอบครัวหรือเพื่อน'],
+  ['bills', 'short', 'Unpaid bills & taxes', 'ค่าใช้จ่ายและภาษีค้างจ่าย'],
+  ['mortgage', 'long', 'Mortgage', 'สินเชื่อบ้าน'],
+  ['car', 'long', 'Car & motorbike loans', 'สินเชื่อรถยนต์และจักรยานยนต์'],
+  ['student', 'long', 'Student loans (e.g. กยศ.)', 'เงินกู้เพื่อการศึกษา (กยศ.)'],
+  ['biz', 'long', 'Business loans', 'สินเชื่อธุรกิจ'],
+  ['lother', 'long', 'Other loans', 'หนี้สินอื่น']
+].map(([k, g, en, th]) => ({ k, g, n: [en, th] }));
+const acat = k => ACATS.find(c => c.k === k) || ACATS[ACATS.length - 1];
+const lcat = k => LCATS.find(c => c.k === k) || LCATS[LCATS.length - 1];
+const CURRENCIES = ['THB', 'USD', 'EUR', 'GBP', 'JPY', 'SGD', 'CNY', 'HKD', 'AUD'];
+
+/* ---------- State ---------- */
+function blank() {
+  return {
+    v: 1, lang: (navigator.language || '').toLowerCase().startsWith('th') ? 'th' : 'en', currency: 'THB', tab: 'overview',
+    isSample: false, owner: '', asOf: TODAY,
+    profile: { income: '', otherIncome: '', expenses: '', age: '', retireAge: 60, dependents: 0, emergencyTarget: 6 },
+    assets: [], liabilities: [], goals: [], snapshots: [],
+    borrow: { purpose: 'home', dsr: 40, rate: 6, years: 30, ltv: 90, costs: 3, price: '' }
+  };
+}
+function sample() {
+  const s = blank();
+  s.isSample = true; s.owner = '';
+  s.profile = { income: 95000, otherIncome: 5000, expenses: 38000, age: 34, retireAge: 60, dependents: 1, emergencyTarget: 6 };
+  const A = (cat, name, value, cost, rate, inst, note) => ({ id: uid(), cat, name, value, cost: cost ?? '', rate: rate ?? '', inst: inst || '', note: note || '' });
+  s.assets = [
+    A('cash', 'Savings account', 220000, null, 0.5, 'KBank'),
+    A('fixed', '12-month fixed deposit', 250000, null, 1.6, 'SCB'),
+    A('mmf', 'Money market fund', 80000, 80000, 1.8, ''),
+    A('stock', 'Thai stocks (SET)', 320000, 280000, null, 'Broker'),
+    A('fund', 'Global equity fund', 210000, 190000, null, ''),
+    A('retire', 'Provident fund (PVD)', 450000, 380000, null, 'Employer'),
+    A('retire', 'RMF', 120000, 110000, null, ''),
+    A('retire', 'Thai ESG / SSF', 80000, 80000, null, ''),
+    A('gold', 'Gold bars (2 baht weight)', 95000, 70000, null, ''),
+    A('home', 'Condo', 2800000, 2500000, null, 'Bangkok', 'Estimated market value'),
+    A('vehicle', 'Car', 520000, 850000, null, '', 'Bought 2023')
+  ];
+  const L = (cat, name, balance, rate, payment, months, lender) => ({ id: uid(), cat, name, balance, rate, payment, months: months ?? '', lender: lender || '', note: '' });
+  s.liabilities = [
+    L('mortgage', 'Condo mortgage', 1950000, 6.1, 14500, 216, 'Bank'),
+    L('car', 'Car loan', 310000, 5.8, 9800, 34, 'Leasing'),
+    L('card', 'Credit card', 28000, 16, 5000, null, ''),
+    L('personal', 'Personal loan', 60000, 22, 4200, 16, '')
+  ];
+  s.goals = [
+    { id: uid(), name: 'Trip to Japan', target: 120000, saved: 30000, date: '2027-10-01' },
+    { id: uid(), name: 'Child education fund', target: 1000000, saved: 150000, date: '2040-05-01' }
+  ];
+  s.snapshots = [
+    { date: '2025-04-30', a: 4410000, l: 2690000 },
+    { date: '2025-10-31', a: 4620000, l: 2580000 },
+    { date: '2026-04-30', a: 4790000, l: 2460000 }
+  ];
+  return s;
+}
+function load() {
+  try { const raw = localStorage.getItem(KEY); if (raw) { const d = JSON.parse(raw); if (d && d.v === 1) return Object.assign(blank(), d); } } catch (e) {}
+  return null;
+}
+let S = load() || sample();
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+const tx = (en, th) => S.lang === 'th' ? th : en;
+const nm = arr => arr[S.lang === 'th' ? 1 : 0];
+
+/* ---------- Formatting ---------- */
+const loc = () => S.lang === 'th' ? 'th-TH' : 'en-US';
+function money(n, compact) {
+  try {
+    return new Intl.NumberFormat(loc(), { style: 'currency', currency: S.currency, maximumFractionDigits: compact ? 1 : 0, notation: compact ? 'compact' : 'standard' }).format(n || 0);
+  } catch (e) { return S.currency + ' ' + Math.round(n || 0).toLocaleString(); }
+}
+const pct = (x, d = 0) => isFinite(x) ? (x * 100).toFixed(d) + '%' : '–';
+const fdate = d => { try { return new Date(d + 'T00:00:00').toLocaleDateString(loc(), { year: 'numeric', month: 'short', day: 'numeric' }); } catch (e) { return d; } };
+const monthsUntil = d => { const t = new Date(d + 'T00:00:00'), n = new Date(); return Math.max(1, (t.getFullYear() - n.getFullYear()) * 12 + (t.getMonth() - n.getMonth())); };
+
+/* ---------- Finance math ---------- */
+function pmt(principal, ratePct, months) {
+  const r = ratePct / 100 / 12; if (months <= 0) return 0;
+  return r === 0 ? principal / months : principal * r / (1 - Math.pow(1 + r, -months));
+}
+function pv(payment, ratePct, months) {
+  const r = ratePct / 100 / 12; if (months <= 0 || payment <= 0) return 0;
+  return r === 0 ? payment * months : payment * (1 - Math.pow(1 + r, -months)) / r;
+}
+
+function calc() {
+  const g = { liquid: 0, invest: 0, personal: 0 }, byCat = {};
+  S.assets.forEach(a => { const c = acat(a.cat), v = num(a.value); g[c.g] += v; byCat[c.k] = (byCat[c.k] || 0) + v; });
+  const totalA = g.liquid + g.invest + g.personal;
+  let short = 0, long = 0, debtPay = 0, due12 = 0; const byL = {};
+  S.liabilities.forEach(l => {
+    const c = lcat(l.cat), b = num(l.balance), p = num(l.payment);
+    if (c.g === 'short') { short += b; due12 += b; } else { long += b; due12 += Math.min(b, p * 12); }
+    debtPay += p; byL[c.k] = (byL[c.k] || 0) + b;
+  });
+  const totalL = short + long, nw = totalA - totalL;
+  const P = S.profile, income = num(P.income) + num(P.otherIncome), expenses = num(P.expenses);
+  const outflow = expenses + debtPay, surplus = income - outflow;
+  const target = num(P.emergencyTarget) || 6;
+  const st = (ok, mid, v) => v === null ? 'na' : ok ? 'good' : mid ? 'warn' : 'bad';
+  const em = outflow > 0 ? g.liquid / outflow : null;
+  const cr = due12 > 0 ? g.liquid / due12 : (S.assets.length ? Infinity : null);
+  const da = totalA > 0 ? totalL / totalA : null;
+  const dsr = income > 0 ? debtPay / income : null;
+  const sr = income > 0 ? surplus / income : null;
+  const ir = totalA > 0 ? (nw > 0 ? g.invest / nw : 0) : null;
+  const ratios = [
+    { k: 'em', n: tx('Emergency fund', 'เงินสำรองฉุกเฉิน'), v: em, show: em === null ? '–' : em.toFixed(1) + tx(' mo', ' เดือน'),
+      tgt: tx(`Aim for ${target}+ months of spending`, `ควรมี ${target} เดือนขึ้นไป`), s: st(em >= target, em >= 3, em),
+      f: tx('Liquid assets ÷ monthly spending (incl. debt payments)', 'สินทรัพย์สภาพคล่อง ÷ ค่าใช้จ่ายต่อเดือน (รวมค่างวดหนี้)') },
+    { k: 'cr', n: tx('Liquidity ratio', 'อัตราส่วนสภาพคล่อง'), v: cr, show: cr === null ? '–' : cr === Infinity ? tx('No debt due', 'ไม่มีหนี้ครบกำหนด') : cr.toFixed(2) + '×',
+      tgt: tx('1.0× or more', 'ควรมากกว่า 1 เท่า'), s: st(cr >= 1, cr >= 0.5, cr),
+      f: tx('Liquid assets ÷ debts due in the next 12 months', 'สินทรัพย์สภาพคล่อง ÷ หนี้ที่ต้องชำระใน 12 เดือน') },
+    { k: 'da', n: tx('Debt to assets', 'หนี้สินต่อสินทรัพย์'), v: da, show: pct(da),
+      tgt: tx('50% or less', 'ไม่ควรเกิน 50%'), s: st(da <= 0.5, da <= 0.75, da),
+      f: tx('Total liabilities ÷ total assets', 'หนี้สินรวม ÷ สินทรัพย์รวม') },
+    { k: 'dsr', n: tx('Debt service ratio (DSR)', 'ภาระหนี้ต่อรายได้ (DSR)'), v: dsr, show: pct(dsr),
+      tgt: tx('35–40% or less', 'ไม่ควรเกิน 35–40%'), s: st(dsr <= 0.35, dsr <= 0.45, dsr),
+      f: tx('Monthly debt payments ÷ monthly income', 'ค่างวดหนี้ต่อเดือน ÷ รายได้ต่อเดือน') },
+    { k: 'sr', n: tx('Savings rate', 'อัตราการออม'), v: sr, show: pct(sr),
+      tgt: tx('10–20% or more', 'ควรออม 10–20% ขึ้นไป'), s: st(sr >= 0.1, sr >= 0, sr),
+      f: tx('(Income − spending − debt payments) ÷ income', '(รายได้ − ค่าใช้จ่าย − ค่างวด) ÷ รายได้') },
+    { k: 'ir', n: tx('Investment to net worth', 'สินทรัพย์ลงทุนต่อความมั่งคั่งสุทธิ'), v: ir, show: nw <= 0 && totalA > 0 ? tx('Net worth ≤ 0', 'ความมั่งคั่ง ≤ 0') : pct(ir),
+      tgt: tx('50% or more', 'ควรมากกว่า 50%'), s: st(ir >= 0.5, ir >= 0.25, ir),
+      f: tx('Investment assets ÷ net worth', 'สินทรัพย์เพื่อการลงทุน ÷ ความมั่งคั่งสุทธิ') }
+  ];
+  const scored = ratios.filter(r => r.s !== 'na');
+  const score = scored.length ? Math.round(scored.reduce((s, r) => s + (r.s === 'good' ? 100 : r.s === 'warn' ? 60 : 20), 0) / scored.length) : null;
+  return { g, byCat, byL, totalA, short, long, totalL, nw, debtPay, due12, income, expenses, outflow, surplus, target, ratios, score, em, dsr, sr, da, ir };
+}
+
+/* ---------- Suggestions ---------- */
+function suggestions(C) {
+  const out = [], add = (s, t, b) => out.push({ s, t, b });
+  const P = S.profile;
+  if (!S.assets.length && !S.liabilities.length) { add('info', tx('Start by listing what you own and owe', 'เริ่มจากบันทึกสิ่งที่มีและหนี้ที่ต้องจ่าย'), tx('Add your bank accounts, investments, home, vehicles and every debt. Rough values are fine for a first pass.', 'เพิ่มบัญชีเงินฝาก การลงทุน บ้าน รถ และหนี้ทุกก้อน ใช้ตัวเลขโดยประมาณก่อนได้')); return out; }
+  if (!C.income) add('info', tx('Add your monthly income and spending', 'เพิ่มรายได้และค่าใช้จ่ายต่อเดือน'), tx('Open the Plan tab and fill in income and living costs. Savings rate, DSR, emergency fund and borrowing capacity all depend on them.', 'ไปที่แท็บแผนการเงิน แล้วกรอกรายได้และค่าใช้จ่าย เพื่อคำนวณอัตราการออม DSR เงินสำรองฉุกเฉิน และกำลังกู้'));
+  if (C.nw < 0) add('bad', tx('Your debts are larger than your assets', 'หนี้สินมากกว่าสินทรัพย์'), tx(`Net worth is ${money(C.nw)}. Pause new borrowing, cut non-essential spending and direct every spare baht to the most expensive debt first.`, `ความมั่งคั่งสุทธิติดลบ ${money(C.nw)} ควรงดก่อหนี้ใหม่ ลดรายจ่ายที่ไม่จำเป็น และนำเงินส่วนเกินไปปิดหนี้ดอกเบี้ยสูงก่อน`));
+  const hi = S.liabilities.filter(l => num(l.rate) >= 12 && num(l.balance) > 0).sort((a, b) => num(b.rate) - num(a.rate));
+  if (hi.length) {
+    const tot = hi.reduce((s, l) => s + num(l.balance), 0), first = hi[0];
+    add('bad', tx(`Pay off high-interest debt: ${money(tot)}`, `เร่งปิดหนี้ดอกเบี้ยสูง ${money(tot)}`),
+      tx(`Start with “${first.name}” at ${num(first.rate)}% a year, then the next highest rate (the avalanche method). No investment reliably beats a guaranteed ${num(first.rate)}%. Ask your bank about a debt consolidation or refinance programme.`,
+         `เริ่มจาก “${first.name}” ดอกเบี้ย ${num(first.rate)}% ต่อปี แล้วไล่ไปหนี้ที่ดอกเบี้ยสูงรองลงมา ไม่มีการลงทุนใดให้ผลตอบแทนแน่นอนเท่ากับการประหยัดดอกเบี้ย ${num(first.rate)}% ลองสอบถามโครงการรวมหนี้หรือรีไฟแนนซ์กับธนาคาร`));
+  }
+  if (C.em !== null) {
+    const need = C.target * C.outflow - C.g.liquid;
+    if (C.em < 3) add('bad', tx('Build your emergency fund', 'สร้างเงินสำรองฉุกเฉิน'), tx(`You have ${C.em.toFixed(1)} months of spending in liquid assets. Set aside ${money(need)} more in a savings account or money market fund to reach ${C.target} months.`, `ตอนนี้มีเงินสำรอง ${C.em.toFixed(1)} เดือน ควรเก็บเพิ่มอีก ${money(need)} ในบัญชีออมทรัพย์หรือกองทุนตลาดเงิน ให้ครบ ${C.target} เดือน`));
+    else if (C.em < C.target) add('warn', tx('Top up your emergency fund', 'เติมเงินสำรองฉุกเฉินให้ครบ'), tx(`${C.em.toFixed(1)} months covered. ${money(need)} more reaches your ${C.target}-month target.`, `มีเงินสำรอง ${C.em.toFixed(1)} เดือน เก็บเพิ่มอีก ${money(need)} จะครบเป้าหมาย ${C.target} เดือน`));
+    else if (C.em > 12) add('info', tx('Put idle cash to work', 'นำเงินสดส่วนเกินไปลงทุน'), tx(`Your liquid assets cover ${C.em.toFixed(0)} months. Keeping ${C.target} months and investing about ${money(-need)} could earn more than deposit rates.`, `สินทรัพย์สภาพคล่องพอใช้ ${C.em.toFixed(0)} เดือน หากเก็บไว้ ${C.target} เดือน แล้วนำส่วนเกินประมาณ ${money(-need)} ไปลงทุน อาจได้ผลตอบแทนสูงกว่าดอกเบี้ยเงินฝาก`));
+  }
+  if (C.dsr !== null) {
+    if (C.dsr > 0.45) add('bad', tx('Debt payments take too much of your income', 'ภาระผ่อนหนี้สูงเกินไป'), tx(`${pct(C.dsr)} of income goes to debt payments. Avoid new loans, and look at refinancing or extending terms to bring it under 40%. Banks may decline new credit at this level.`, `ค่างวดหนี้คิดเป็น ${pct(C.dsr)} ของรายได้ ควรงดกู้เพิ่ม และพิจารณารีไฟแนนซ์หรือขยายระยะเวลาผ่อนให้ต่ำกว่า 40% ระดับนี้ธนาคารอาจไม่อนุมัติสินเชื่อใหม่`));
+    else if (C.dsr > 0.35) add('warn', tx('Debt payments are close to the limit', 'ภาระผ่อนหนี้ใกล้เพดาน'), tx(`DSR is ${pct(C.dsr)}. Keep it below 35–40% before taking on a mortgage or car loan.`, `DSR อยู่ที่ ${pct(C.dsr)} ควรลดให้ต่ำกว่า 35–40% ก่อนกู้บ้านหรือรถ`));
+  }
+  if (C.sr !== null) {
+    if (C.sr < 0) add('bad', tx('You spend more than you earn', 'รายจ่ายมากกว่ารายได้'), tx(`The monthly shortfall is ${money(-C.surplus)}. List your expenses and cut the largest non-essential ones first.`, `ขาดดุลเดือนละ ${money(-C.surplus)} ลองจดรายจ่ายและตัดรายการที่ไม่จำเป็นที่ใหญ่ที่สุดก่อน`));
+    else if (C.sr < 0.1) add('warn', tx('Raise your savings rate to 10%', 'เพิ่มอัตราการออมเป็น 10%'), tx(`You save ${pct(C.sr)} of income. Saving ${money(C.income * 0.1)} a month automatically on payday is a good first target.`, `ตอนนี้ออม ${pct(C.sr)} ของรายได้ ลองตั้งโอนอัตโนมัติวันเงินเดือนออกเดือนละ ${money(C.income * 0.1)}`));
+  }
+  if (C.da !== null && C.da > 0.5) add(C.da > 0.75 ? 'bad' : 'warn', tx('Reduce debt relative to assets', 'ลดสัดส่วนหนี้ต่อสินทรัพย์'), tx(`Debts are ${pct(C.da)} of your assets. Below 50% gives you a cushion if asset prices fall.`, `หนี้สินคิดเป็น ${pct(C.da)} ของสินทรัพย์ ควรต่ำกว่า 50% เพื่อรองรับกรณีราคาสินทรัพย์ลดลง`));
+  if (C.nw > 0 && C.ir !== null && C.ir < 0.5) add('warn', tx('Grow your investment assets', 'เพิ่มสินทรัพย์เพื่อการลงทุน'), tx(`Investments are ${pct(C.ir)} of net worth; much of your wealth sits in things you use. Investing a fixed amount every month (DCA) in diversified funds builds this over time.`, `สินทรัพย์ลงทุนคิดเป็น ${pct(C.ir)} ของความมั่งคั่งสุทธิ ความมั่งคั่งส่วนใหญ่อยู่ในของใช้ส่วนตัว การลงทุนสม่ำเสมอทุกเดือน (DCA) ในกองทุนที่กระจายความเสี่ยงช่วยเพิ่มสัดส่วนนี้ได้`));
+  if (!S.assets.some(a => a.cat === 'retire') && num(P.age) < num(P.retireAge || 60)) add('warn', tx('Start saving for retirement', 'เริ่มออมเพื่อเกษียณ'), tx('You have no retirement funds listed. In Thailand, provident fund (PVD), RMF and Thai ESG contributions are tax-deductible within limits, so you save tax while you save for later.', 'ยังไม่มีกองทุนเพื่อการเกษียณ ในไทยเงินสะสม PVD, RMF และ Thai ESG ลดหย่อนภาษีได้ตามเกณฑ์ ช่วยทั้งออมและประหยัดภาษี'));
+  if (num(P.dependents) > 0 && !S.assets.some(a => a.cat === 'insure')) add('warn', tx('Protect the people who depend on you', 'วางแผนคุ้มครองคนที่พึ่งพาคุณ'), tx(`You have ${num(P.dependents)} dependant(s) and no life insurance listed. A common guide is cover worth your debts plus 5–10 years of income. Pure term insurance is the cheapest way to get it.`, `คุณมีผู้อยู่ในอุปการะ ${num(P.dependents)} คน แต่ยังไม่มีประกันชีวิต แนวทางทั่วไปคือทุนประกันเท่ากับหนี้สินรวมกับรายได้ 5–10 ปี ประกันแบบชั่วระยะเวลามีเบี้ยถูกที่สุด`));
+  const investable = C.g.liquid + C.g.invest;
+  if (investable > 0) {
+    const top = Object.entries(C.byCat).filter(([k]) => ['liquid', 'invest'].includes(acat(k).g) && !['cash', 'fixed', 'mmf', 'retire'].includes(k)).sort((a, b) => b[1] - a[1])[0];
+    if (top && top[1] / investable > 0.5) add('warn', tx('Spread your investments', 'กระจายการลงทุน'), tx(`${nm(acat(top[0]).n)} make up ${pct(top[1] / investable)} of your liquid and investment assets. Spreading across asset types lowers the risk of one bad year.`, `${nm(acat(top[0]).n)} คิดเป็น ${pct(top[1] / investable)} ของสินทรัพย์สภาพคล่องและสินทรัพย์ลงทุน การกระจายไปหลายประเภทช่วยลดความเสี่ยง`));
+    if ((C.byCat.crypto || 0) / investable > 0.1) add('warn', tx('Keep speculative assets small', 'จำกัดสัดส่วนสินทรัพย์เก็งกำไร'), tx(`Crypto is ${pct((C.byCat.crypto || 0) / investable)} of your investable assets. Many planners keep high-volatility assets under 5–10%.`, `คริปโตคิดเป็น ${pct((C.byCat.crypto || 0) / investable)} ของสินทรัพย์ลงทุน นักวางแผนการเงินมักแนะนำไม่เกิน 5–10%`));
+  }
+  const goalNeed = S.goals.reduce((s, g) => s + Math.max(0, num(g.target) - num(g.saved)) / monthsUntil(g.date), 0);
+  if (goalNeed > 0 && C.income > 0 && goalNeed > Math.max(0, C.surplus)) add('warn', tx('Your goals need more than you save', 'เป้าหมายต้องใช้เงินมากกว่าที่ออมได้'), tx(`Your goals need about ${money(goalNeed)} a month, but you have ${money(Math.max(0, C.surplus))} left after spending. Push a target date back, lower a target, or raise income.`, `เป้าหมายต้องออมราว ${money(goalNeed)} ต่อเดือน แต่มีเงินเหลือ ${money(Math.max(0, C.surplus))} ลองเลื่อนวันเป้าหมาย ลดยอดเป้าหมาย หรือเพิ่มรายได้`));
+  const last = S.snapshots.map(s => s.date).sort().pop();
+  if (!last || (Date.now() - new Date(last).getTime()) / 864e5 > 180) add('info', tx('Save a snapshot of today’s balance sheet', 'บันทึกงบดุลของวันนี้'), tx('Snapshots let you see whether net worth is rising. Update your balance sheet every 6–12 months, or after a big event such as buying a home.', 'การบันทึกไว้ช่วยให้เห็นว่าความมั่งคั่งเพิ่มขึ้นหรือไม่ ควรอัปเดตทุก 6–12 เดือน หรือเมื่อมีเหตุการณ์สำคัญ เช่น ซื้อบ้าน'));
+  if (!out.some(o => o.s === 'bad' || o.s === 'warn')) add('good', tx('Your finances look healthy', 'สถานะการเงินอยู่ในเกณฑ์ดี'), tx('All key ratios are within healthy ranges. Keep investing regularly and review once or twice a year.', 'อัตราส่วนสำคัญอยู่ในเกณฑ์ดี ลงทุนต่อเนื่องและทบทวนปีละ 1–2 ครั้ง'));
+  const order = { bad: 0, warn: 1, info: 2, good: 3 };
+  return out.sort((a, b) => order[a.s] - order[b.s]);
+}
+
+/* ---------- Borrowing ---------- */
+const PURPOSE = {
+  home: { rate: 6, years: 30, ltv: 90, costs: 3, maxYears: 40 },
+  car: { rate: 5.5, years: 6, ltv: 80, costs: 1, maxYears: 8 },
+  other: { rate: 12, years: 5, ltv: 100, costs: 0, maxYears: 10 }
+};
+function borrowCalc(C, B = S.borrow) {
+  const income = C.income, age = num(S.profile.age);
+  const dsr = num(B.dsr) / 100, rate = num(B.rate), ltv = Math.min(1, num(B.ltv) / 100), costs = num(B.costs) / 100;
+  let years = num(B.years); const ageCap = age ? Math.max(0, 70 - age) : null;
+  const capped = ageCap !== null && B.purpose === 'home' && years > ageCap;
+  if (capped) years = ageCap;
+  const n = Math.round(years * 12);
+  const room = Math.max(0, income * dsr - C.debtPay);
+  const maxLoan = pv(room, rate, n);
+  const priceByLoan = ltv > 0 ? maxLoan / ltv : 0;
+  const reserve = C.target * C.outflow;
+  const cash = Math.max(0, C.g.liquid - reserve);
+  const upfront = (1 - ltv) + costs;
+  const priceByCash = upfront > 0 ? cash / upfront : Infinity;
+  const price = Math.min(priceByLoan, priceByCash);
+  const loan = price * ltv;
+  const limit = priceByLoan <= priceByCash ? 'income' : 'cash';
+  let check = null;
+  const p = num(B.price);
+  if (p > 0) {
+    const l = p * ltv, pay = pmt(l, rate, n), newDsr = income > 0 ? (C.debtPay + pay) / income : Infinity, needCash = p * upfront;
+    check = { p, l, pay, newDsr, needCash, cashOk: needCash <= cash, dsrOk: newDsr <= dsr };
+  }
+  return { income, room, maxLoan, priceByLoan, priceByCash, price, loan, limit, cash, reserve, years, capped, ageCap, n, rate, ltv, costs, dsr, check, per1m: pmt(1e6, rate, n) };
+}
+
+/* ---------- Rendering ---------- */
+const TABS = [['overview', 'Overview', 'ภาพรวม'], ['assets', 'Assets', 'สินทรัพย์'], ['liabilities', 'Liabilities', 'หนี้สิน'], ['plan', 'Plan', 'แผนการเงิน'], ['borrow', 'Borrowing power', 'กำลังกู้'], ['learn', 'Learn', 'เรียนรู้']];
+const $ = id => document.getElementById(id);
+
+function renderHeader() {
+  document.documentElement.lang = S.lang;
+  $('appName').textContent = tx('Personal Balance Sheet', 'งบดุลส่วนบุคคล');
+  $('appSub').textContent = tx('Statement of financial position', 'งบแสดงฐานะการเงิน') + (S.owner ? ' · ' + S.owner : '');
+  $('langEn').setAttribute('aria-pressed', S.lang === 'en'); $('langTh').setAttribute('aria-pressed', S.lang === 'th');
+  $('settingsBtn').textContent = tx('Settings & data', 'ตั้งค่าและข้อมูล');
+  $('tabs').innerHTML = TABS.map(([k, en, th]) => `<button type="button" role="tab" id="tab-${k}" aria-selected="${S.tab === k}" data-act="tab" data-v="${k}">${S.lang === 'th' ? th : en}</button>`).join('');
+}
+function render() {
+  renderHeader();
+  const C = calc();
+  const banner = S.isSample ? `<div class="banner"><p>${tx('These are <b>example figures</b> so you can see how the app works. Your own data is saved only in this browser.', 'ตัวเลขนี้เป็น<b>ข้อมูลตัวอย่าง</b> เพื่อให้เห็นการทำงานของแอป ข้อมูลของคุณจะบันทึกไว้ในเบราว์เซอร์นี้เท่านั้น')}</p><button type="button" class="btn pri" data-act="startOwn">${tx('Start with my own data', 'เริ่มกรอกข้อมูลของฉัน')}</button></div>` : '';
+  const views = { overview, assets: assetsView, liabilities: liabView, plan: planView, borrow: borrowView, learn: learnView };
+  $('app').innerHTML = banner + (views[S.tab] || overview)(C);
+  try { if (location.hash.slice(1) !== S.tab) history.replaceState(null, '', '#' + S.tab); } catch (e) {}
+}
+
+function kpis(C) {
+  const prev = S.snapshots.slice().sort((a, b) => a.date.localeCompare(b.date)).pop();
+  const delta = prev ? C.nw - (prev.a - prev.l) : null;
+  const sc = C.score, scLbl = sc === null ? '–' : sc >= 80 ? tx('Healthy', 'ดี') : sc >= 55 ? tx('Needs attention', 'ควรปรับปรุง') : tx('At risk', 'มีความเสี่ยง');
+  return `<section class="kpis" aria-label="${tx('Summary', 'สรุป')}">
+    <div class="kpi"><span class="eyebrow">${tx('Total assets', 'สินทรัพย์รวม')}</span><span class="v num">${money(C.totalA)}</span><span class="d">${S.assets.length} ${tx('items', 'รายการ')}</span></div>
+    <div class="kpi"><span class="eyebrow">${tx('Total liabilities', 'หนี้สินรวม')}</span><span class="v num">${money(C.totalL)}</span><span class="d">${money(C.debtPay)} ${tx('/ month in payments', '/ เดือน ค่างวด')}</span></div>
+    <div class="kpi nw"><span class="eyebrow">${tx('Net worth (equity)', 'ความมั่งคั่งสุทธิ')}</span><span class="v num">${money(C.nw)}</span><span class="d">${delta === null ? tx('Assets − liabilities', 'สินทรัพย์ − หนี้สิน') : (delta >= 0 ? '▲ ' : '▼ ') + money(Math.abs(delta)) + tx(' since ', ' ตั้งแต่ ') + fdate(prev.date)}</span></div>
+    <div class="kpi"><span class="eyebrow">${tx('Financial health', 'สุขภาพการเงิน')}</span><span class="v num">${sc === null ? '–' : sc + '<span class="sub"> / 100</span>'}</span><span class="d">${scLbl}</span></div>
+  </section>`;
+}
+
+function statement(C) {
+  const assetRows = ['liquid', 'invest', 'personal'].map(g => {
+    const cats = ACATS.filter(c => c.g === g && C.byCat[c.k]);
+    return `<tr class="grp" style="--dot:${GROUPS[g].c}"><td>${nm(GROUPS[g].n)}</td><td class="n">${money(C.g[g])}</td><td class="p">${C.totalA ? pct(C.g[g] / C.totalA) : ''}</td></tr>` +
+      (cats.length ? cats.map(c => `<tr class="item"><td>${nm(c.n)}</td><td class="n">${money(C.byCat[c.k])}</td><td class="p"></td></tr>`).join('') : `<tr class="item"><td class="sub">${tx('None yet', 'ยังไม่มี')}</td><td></td><td></td></tr>`);
+  }).join('');
+  const liabRows = ['short', 'long'].map(g => {
+    const cats = LCATS.filter(c => c.g === g && C.byL[c.k]);
+    return `<tr class="grp" style="--dot:var(--c-debt)"><td>${nm(GROUPS[g].n)}</td><td class="n">${money(g === 'short' ? C.short : C.long)}</td><td class="p">${C.totalA ? pct((g === 'short' ? C.short : C.long) / C.totalA) : ''}</td></tr>` +
+      (cats.length ? cats.map(c => `<tr class="item"><td>${nm(c.n)}</td><td class="n">${money(C.byL[c.k])}</td><td class="p"></td></tr>`).join('') : `<tr class="item"><td class="sub">${tx('None', 'ไม่มี')}</td><td></td><td></td></tr>`);
+  }).join('');
+  return `<section class="card" aria-labelledby="stmtH">
+    <div class="stmt-head"><div><h2 id="stmtH">${tx('Statement of financial position', 'งบแสดงฐานะการเงิน')}</h2><span class="sub">${S.owner ? esc(S.owner) + ' · ' : ''}${tx('As of', 'ณ วันที่')} ${fdate(S.asOf || TODAY)} · ${S.currency}</span></div>
+      <button type="button" class="btn" data-act="snapshot">${tx('Save snapshot', 'บันทึกสแนปช็อต')}</button></div>
+    <div class="stmt">
+      <table><thead><tr><th>${tx('Assets', 'สินทรัพย์')}</th><th></th><th></th></tr></thead><tbody>${assetRows}
+        <tr class="total dbl"><td>${tx('Total assets', 'สินทรัพย์รวม')}</td><td class="n">${money(C.totalA)}</td><td class="p">100%</td></tr></tbody></table>
+      <table><thead><tr><th>${tx('Liabilities & net worth', 'หนี้สินและความมั่งคั่งสุทธิ')}</th><th></th><th></th></tr></thead><tbody>${liabRows}
+        <tr class="total"><td>${tx('Total liabilities', 'หนี้สินรวม')}</td><td class="n">${money(C.totalL)}</td><td class="p">${C.totalA ? pct(C.totalL / C.totalA) : ''}</td></tr>
+        <tr class="grp" style="--dot:var(--accent)"><td>${tx('Net worth (equity)', 'ความมั่งคั่งสุทธิ (ส่วนของเจ้าของ)')}</td><td class="n">${money(C.nw)}</td><td class="p">${C.totalA ? pct(C.nw / C.totalA) : ''}</td></tr>
+        <tr class="total dbl"><td>${tx('Total liabilities + net worth', 'หนี้สิน + ความมั่งคั่งสุทธิ')}</td><td class="n">${money(C.totalL + C.nw)}</td><td class="p">100%</td></tr></tbody></table>
+    </div>
+    <p class="check"><b>✓</b> ${tx('Balanced', 'สมดุล')}: ${tx('Assets', 'สินทรัพย์')} ${money(C.totalA)} = ${tx('Liabilities', 'หนี้สิน')} ${money(C.totalL)} + ${tx('Net worth', 'ความมั่งคั่งสุทธิ')} ${money(C.nw)}</p>
+  </section>`;
+}
+
+function balanceBars(C) {
+  const max = Math.max(C.totalA, C.totalL, 1);
+  const h = v => (Math.max(0, v) / max * 100).toFixed(2) + '%';
+  const seg = (v, c, label) => v > 0 ? `<div class="seg-b" style="height:${h(v)};background:${c}" title="${esc(label)}: ${money(v)}">${v / max > 0.12 ? esc(label) : ''}</div>` : '';
+  return `<section class="card"><div class="card-h"><h2>${tx('How your balance sheet balances', 'งบดุลสมดุลอย่างไร')}</h2></div>
+    <div class="bal" role="img" aria-label="${tx('Assets compared with liabilities plus net worth', 'สินทรัพย์เทียบกับหนี้สินบวกความมั่งคั่งสุทธิ')}">
+      <div><div class="col">${seg(C.g.personal, GROUPS.personal.c, nm(GROUPS.personal.n))}${seg(C.g.invest, GROUPS.invest.c, nm(GROUPS.invest.n))}${seg(C.g.liquid, GROUPS.liquid.c, nm(GROUPS.liquid.n))}</div></div>
+      <div><div class="col">${seg(C.nw, 'var(--accent)', tx('Net worth', 'ความมั่งคั่งสุทธิ'))}${seg(C.long, 'var(--c-debt)', nm(GROUPS.long.n))}${seg(C.short, 'color-mix(in srgb, var(--c-debt) 70%, var(--ink))', nm(GROUPS.short.n))}</div></div>
+    </div>
+    <div class="bal" style="height:auto"><div class="cap">${tx('What you own', 'สิ่งที่คุณมี')}<br><b class="num">${money(C.totalA, true)}</b></div><div class="cap">${tx('Who it belongs to', 'เป็นของใคร')}<br><b class="num">${money(C.totalL, true)} + ${money(C.nw, true)}</b></div></div>
+    <div class="legend"><span><i style="background:var(--c-liquid)"></i>${nm(GROUPS.liquid.n)}</span><span><i style="background:var(--c-invest)"></i>${nm(GROUPS.invest.n)}</span><span><i style="background:var(--c-personal)"></i>${nm(GROUPS.personal.n)}</span><span><i style="background:var(--c-debt)"></i>${tx('Liabilities', 'หนี้สิน')}</span><span><i style="background:var(--accent)"></i>${tx('Net worth', 'ความมั่งคั่งสุทธิ')}</span></div>
+    ${C.nw < 0 ? `<p class="note" style="margin-top:8px">${tx('Liabilities are larger than assets, so net worth is negative.', 'หนี้สินมากกว่าสินทรัพย์ ความมั่งคั่งสุทธิจึงติดลบ')}</p>` : ''}
+  </section>`;
+}
+
+function allocation(C) {
+  const cats = Object.entries(C.byCat).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+  const r = 62, circ = 2 * Math.PI * r; let off = 0;
+  const ring = ['liquid', 'invest', 'personal'].map(g => {
+    const v = C.g[g]; if (!v || !C.totalA) return '';
+    const len = v / C.totalA * circ; const s = `<circle r="${r}" cx="80" cy="80" fill="none" stroke="${GROUPS[g].c}" stroke-width="22" stroke-dasharray="${Math.max(0, len - 2)} ${circ}" stroke-dashoffset="${-off}" transform="rotate(-90 80 80)"><title>${nm(GROUPS[g].n)} ${pct(v / C.totalA)}</title></circle>`;
+    off += len; return s;
+  }).join('');
+  const list = cats.slice(0, 7).map(([k, v]) => `<li><span>${nm(acat(k).n)}</span><span class="num">${pct(v / C.totalA)}</span><span class="bar"><span style="width:${(v / cats[0][1] * 100).toFixed(1)}%;background:${GROUPS[acat(k).g].c}"></span></span></li>`).join('');
+  return `<section class="card"><div class="card-h"><h2>${tx('Where your assets are', 'สินทรัพย์ของคุณอยู่ที่ไหน')}</h2><span class="sub">${tx('Share of total assets', 'สัดส่วนของสินทรัพย์รวม')}</span></div>
+    ${C.totalA ? `<div class="alloc"><svg viewBox="0 0 160 160" width="160" height="160" role="img" aria-label="${tx('Asset allocation by group', 'สัดส่วนสินทรัพย์ตามกลุ่ม')}"><circle r="${r}" cx="80" cy="80" fill="none" stroke="var(--sunken)" stroke-width="22"/>${ring}<text x="80" y="76" text-anchor="middle" font-size="11">${tx('Investable', 'ลงทุนได้')}</text><text x="80" y="94" text-anchor="middle" font-size="16" font-weight="600" style="fill:var(--ink)">${pct((C.g.liquid + C.g.invest) / C.totalA)}</text></svg><ul>${list}</ul></div>` : `<div class="empty">${tx('Add assets to see the breakdown.', 'เพิ่มสินทรัพย์เพื่อดูสัดส่วน')}</div>`}
+  </section>`;
+}
+
+function history(C) {
+  const pts = S.snapshots.map(s => ({ d: s.date, v: s.a - s.l })).filter(p => p.d !== TODAY);
+  pts.push({ d: TODAY, v: C.nw, now: true });
+  pts.sort((a, b) => a.d.localeCompare(b.d));
+  if (pts.length < 2) return `<section class="card"><div class="card-h"><h2>${tx('Net worth over time', 'ความมั่งคั่งสุทธิตามเวลา')}</h2></div><div class="empty">${tx('Save a snapshot now and again in a few months to see your progress.', 'บันทึกสแนปช็อตวันนี้ และอีกครั้งในอีกไม่กี่เดือน เพื่อดูความคืบหน้า')}<button type="button" class="btn" data-act="snapshot">${tx('Save snapshot', 'บันทึกสแนปช็อต')}</button></div></section>`;
+  const W = 520, H = 180, pl = 8, pr = 8, pt = 22, pb = 26;
+  const t0 = new Date(pts[0].d).getTime(), t1 = new Date(pts[pts.length - 1].d).getTime() || t0 + 1;
+  const vs = pts.map(p => p.v), lo = Math.min(0, ...vs), hi = Math.max(...vs, 1), span = hi - lo || 1;
+  const x = p => pl + (new Date(p.d).getTime() - t0) / ((t1 - t0) || 1) * (W - pl - pr);
+  const y = v => pt + (1 - (v - lo) / span) * (H - pt - pb);
+  const line = pts.map((p, i) => (i ? 'L' : 'M') + x(p).toFixed(1) + ' ' + y(p.v).toFixed(1)).join(' ');
+  const area = line + ` L ${x(pts[pts.length - 1]).toFixed(1)} ${y(lo)} L ${x(pts[0]).toFixed(1)} ${y(lo)} Z`;
+  const last = pts[pts.length - 1], first = pts[0];
+  const grid = [0.25, 0.5, 0.75].map(f => `<line x1="${pl}" x2="${W - pr}" y1="${pt + f * (H - pt - pb)}" y2="${pt + f * (H - pt - pb)}" stroke="var(--line)" stroke-dasharray="3 4"/>`).join('');
+  const dots = pts.map(p => `<circle cx="${x(p).toFixed(1)}" cy="${y(p.v).toFixed(1)}" r="${p.now ? 5 : 3}" fill="${p.now ? 'var(--accent)' : 'var(--surface)'}" stroke="var(--accent)" stroke-width="2"><title>${fdate(p.d)}: ${money(p.v)}</title></circle>`).join('');
+  const chg = last.v - first.v;
+  return `<section class="card"><div class="card-h"><h2>${tx('Net worth over time', 'ความมั่งคั่งสุทธิตามเวลา')}</h2><span class="sub ${chg >= 0 ? 'up' : 'down'}">${chg >= 0 ? '▲' : '▼'} ${money(Math.abs(chg))} ${tx('since', 'ตั้งแต่')} ${fdate(first.d)}</span></div>
+    <svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${tx('Net worth history', 'ประวัติความมั่งคั่งสุทธิ')}" style="max-width:100%;height:auto">
+      ${grid}<path d="${area}" fill="var(--accent)" opacity=".1"/><path d="${line}" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linejoin="round"/>${dots}
+      <text x="${pl}" y="${H - 6}" font-size="11">${fdate(first.d)}</text><text x="${W - pr}" y="${H - 6}" font-size="11" text-anchor="end">${tx('Today', 'วันนี้')}</text>
+      <text x="${Math.min(W - pr, x(last))}" y="${Math.max(12, y(last.v) - 10)}" font-size="12" font-weight="600" text-anchor="end" style="fill:var(--ink)">${money(last.v, true)}</text>
+    </svg></section>`;
+}
+
+function ratiosBlock(C, title) {
+  const lbl = { good: tx('Healthy', 'ดี'), warn: tx('Watch', 'เฝ้าระวัง'), bad: tx('Act now', 'ควรแก้ไข'), na: tx('Needs data', 'ต้องกรอกข้อมูล') };
+  return `<section class="card"><div class="card-h"><h2>${title || tx('Key financial ratios', 'อัตราส่วนทางการเงินที่สำคัญ')}</h2><button type="button" class="btn ghost" data-act="tab" data-v="learn">${tx('What do these mean?', 'แต่ละค่าหมายถึงอะไร')}</button></div>
+    <div class="ratios">${C.ratios.map(r => `<div class="ratio"><div class="top"><span class="sub">${r.n}</span><span class="pill ${r.s}">${lbl[r.s]}</span></div><span class="val num">${r.show}</span><span class="tgt">${r.tgt}</span><span class="tgt" style="opacity:.8">${r.f}</span></div>`).join('')}</div></section>`;
+}
+function sugBlock(C, limit) {
+  const all = suggestions(C), list = limit ? all.slice(0, limit) : all;
+  return `<section class="card"><div class="card-h"><h2>${tx('Suggested actions', 'สิ่งที่ควรทำ')}</h2>${limit && all.length > limit ? `<button type="button" class="btn ghost" data-act="tab" data-v="plan">${tx('See all', 'ดูทั้งหมด')} (${all.length})</button>` : ''}</div>
+    <div class="sugs">${list.map(s => `<div class="sug ${s.s}"><div><h3>${s.t}</h3><p>${s.b}</p></div></div>`).join('')}</div>
+    <p class="note" style="margin-top:12px">${tx('General guidance based on common financial planning rules, not personal financial advice.', 'คำแนะนำทั่วไปตามหลักการวางแผนการเงิน ไม่ใช่คำแนะนำการลงทุนเฉพาะบุคคล')}</p></section>`;
+}
+
+function overview(C) {
+  return kpis(C) + statement(C) + `<div class="grid g2">${balanceBars(C)}${allocation(C)}</div>` + sugBlock(C, 3) + `<div class="grid g2">${history(C)}${borrowTeaser(C)}</div>` + ratiosBlock(C);
+}
+function borrowTeaser(C) {
+  const b = borrowCalc(C, S.borrow.purpose === 'home' ? S.borrow : Object.assign({}, S.borrow, PURPOSE.home, { purpose: 'home', price: '' }));
+  return `<section class="card"><div class="card-h"><h2>${tx('Home buying power', 'กำลังซื้อบ้าน')}</h2><button type="button" class="btn ghost" data-act="tab" data-v="borrow">${tx('Open calculator', 'เปิดเครื่องคำนวณ')}</button></div>
+    ${b.income ? `<p class="sub">${tx('Estimated price you could afford', 'ราคาบ้านที่น่าจะซื้อได้')}</p><p class="big num">${money(b.price)}</p>
+    <dl class="kv" style="margin-top:10px"><dt>${tx('Maximum loan', 'วงเงินกู้สูงสุด')}</dt><dd>${money(b.maxLoan)}</dd><dt>${tx('Monthly payment room', 'ค่างวดที่ยังผ่อนเพิ่มได้')}</dt><dd>${money(b.room)}</dd><dt>${tx('Limited by', 'ข้อจำกัดหลัก')}</dt><dd>${b.limit === 'income' ? tx('Income & existing debt', 'รายได้และหนี้เดิม') : tx('Cash for down payment', 'เงินดาวน์')}</dd></dl>`
+    : `<div class="empty">${tx('Add your income in the Plan tab to estimate how much you could borrow.', 'กรอกรายได้ในแท็บแผนการเงินเพื่อประเมินวงเงินกู้')}</div>`}</section>`;
+}
+
+function assetsView(C) {
+  const quick = ['cash', 'fund', 'stock', 'retire', 'gold', 'home', 'vehicle', 'crypto'].map(k => `<button type="button" class="chip" data-act="addAsset" data-v="${k}">+ ${nm(acat(k).n)}</button>`).join('');
+  const groups = ['liquid', 'invest', 'personal'].map(g => {
+    const items = S.assets.filter(a => acat(a.cat).g === g).sort((a, b) => num(b.value) - num(a.value));
+    if (!items.length) return '';
+    return `<div class="group-h" style="--dot:${GROUPS[g].c}"><span>${nm(GROUPS[g].n)}</span><span class="num">${money(C.g[g])}</span></div>` + items.map(a => {
+      const v = num(a.value), c = num(a.cost), gl = a.cost !== '' && c > 0 ? v - c : null;
+      const meta = [nm(acat(a.cat).n), a.inst, a.rate !== '' && num(a.rate) ? num(a.rate) + '% ' + tx('/ yr', 'ต่อปี') : '', a.note].filter(Boolean).map(esc).join(' · ');
+      return `<div class="row" role="button" tabindex="0" data-act="editAsset" data-v="${a.id}"><div><div class="nm">${esc(a.name || nm(acat(a.cat).n))}</div><div class="meta">${meta}</div></div><div><div class="amt num">${money(v)}</div>${gl !== null ? `<div class="gl num ${gl >= 0 ? 'up' : 'down'}">${gl >= 0 ? '+' : '−'}${money(Math.abs(gl))} (${pct(gl / c, 1)})</div>` : ''}</div></div>`;
+    }).join('');
+  }).join('');
+  const totalCost = S.assets.filter(a => num(a.cost) > 0).reduce((s, a) => s + num(a.cost), 0), totalValCost = S.assets.filter(a => num(a.cost) > 0).reduce((s, a) => s + num(a.value), 0);
+  return `<section class="card"><div class="card-h"><div><h2>${tx('Assets', 'สินทรัพย์')}</h2><p class="sub">${tx('Everything you own that has money value. Use today’s market value, not what you paid.', 'ทุกอย่างที่คุณเป็นเจ้าของและมีมูลค่า ใช้มูลค่าตลาด ณ วันนี้ ไม่ใช่ราคาที่ซื้อมา')}</p></div><button type="button" class="btn pri" data-act="addAsset">+ ${tx('Add asset', 'เพิ่มสินทรัพย์')}</button></div>
+    <div class="chips" style="margin-bottom:8px">${quick}</div>
+    <div class="list">${groups || `<div class="empty">${tx('No assets yet. Pick a type above to add your first one.', 'ยังไม่มีสินทรัพย์ เลือกประเภทด้านบนเพื่อเพิ่มรายการแรก')}</div>`}</div>
+    ${S.assets.length ? `<div class="group-h" style="--dot:var(--ink);border-bottom:0"><span>${tx('Total assets', 'สินทรัพย์รวม')}</span><span class="num">${money(C.totalA)}</span></div>` : ''}
+    ${totalCost ? `<p class="note">${tx('Unrealised gain/loss on items with a cost entered', 'กำไร/ขาดทุนที่ยังไม่รับรู้ ของรายการที่ระบุต้นทุน')}: <b class="${totalValCost - totalCost >= 0 ? 'up' : 'down'}">${money(totalValCost - totalCost)}</b></p>` : ''}
+  </section>` + allocation(C);
+}
+
+function liabView(C) {
+  const quick = ['card', 'personal', 'mortgage', 'car', 'student', 'family'].map(k => `<button type="button" class="chip" data-act="addLiab" data-v="${k}">+ ${nm(lcat(k).n)}</button>`).join('');
+  const groups = ['short', 'long'].map(g => {
+    const items = S.liabilities.filter(l => lcat(l.cat).g === g).sort((a, b) => num(b.rate) - num(a.rate));
+    if (!items.length) return '';
+    return `<div class="group-h" style="--dot:var(--c-debt)"><span>${nm(GROUPS[g].n)}</span><span class="num">${money(g === 'short' ? C.short : C.long)}</span></div>` + items.map(l => {
+      const months = num(l.months), interest = num(l.rate) ? num(l.balance) * num(l.rate) / 100 / 12 : 0;
+      const meta = [nm(lcat(l.cat).n), l.lender, num(l.rate) ? num(l.rate) + '% ' + tx('/ yr', 'ต่อปี') : '', months ? months + ' ' + tx('months left', 'เดือนที่เหลือ') : ''].filter(Boolean).map(esc).join(' · ');
+      return `<div class="row" role="button" tabindex="0" data-act="editLiab" data-v="${l.id}"><div><div class="nm">${esc(l.name || nm(lcat(l.cat).n))}${num(l.rate) >= 12 ? ` <span class="pill bad">${tx('High interest', 'ดอกเบี้ยสูง')}</span>` : ''}</div><div class="meta">${meta}</div></div><div><div class="amt num">${money(num(l.balance))}</div><div class="gl num sub">${money(num(l.payment))}${tx('/mo', '/เดือน')}${interest ? ` · ${tx('interest', 'ดอกเบี้ย')} ~${money(interest)}` : ''}</div></div></div>`;
+    }).join('');
+  }).join('');
+  const yearlyInterest = S.liabilities.reduce((s, l) => s + num(l.balance) * num(l.rate) / 100, 0);
+  return `<section class="card"><div class="card-h"><div><h2>${tx('Liabilities', 'หนี้สิน')}</h2><p class="sub">${tx('Everything you owe. Enter the outstanding balance today, not the original loan amount.', 'หนี้ทุกก้อนที่ต้องชำระ ใส่ยอดคงค้าง ณ วันนี้ ไม่ใช่วงเงินกู้เริ่มต้น')}</p></div><button type="button" class="btn pri" data-act="addLiab">+ ${tx('Add liability', 'เพิ่มหนี้สิน')}</button></div>
+    <div class="chips" style="margin-bottom:8px">${quick}</div>
+    <div class="list">${groups || `<div class="empty">${tx('No debts recorded. If you have none, that is great news.', 'ยังไม่มีหนี้สิน หากไม่มีหนี้เลยถือว่าดีมาก')}</div>`}</div>
+    ${S.liabilities.length ? `<div class="group-h" style="--dot:var(--ink);border-bottom:0"><span>${tx('Total liabilities', 'หนี้สินรวม')}</span><span class="num">${money(C.totalL)}</span></div>
+    <dl class="kv" style="margin-top:8px"><dt>${tx('Monthly payments', 'ค่างวดต่อเดือน')}</dt><dd>${money(C.debtPay)}</dd><dt>${tx('Interest cost per year (approx.)', 'ดอกเบี้ยต่อปี (โดยประมาณ)')}</dt><dd>${money(yearlyInterest)}</dd><dt>${tx('Due in the next 12 months', 'ต้องชำระใน 12 เดือน')}</dt><dd>${money(C.due12)}</dd></dl>
+    <p class="note" style="margin-top:8px">${tx('Sorted by interest rate. Paying the highest rate first saves the most interest.', 'เรียงตามอัตราดอกเบี้ย การปิดหนี้ดอกเบี้ยสูงก่อนช่วยประหยัดดอกเบี้ยได้มากที่สุด')}</p>` : ''}
+  </section>`;
+}
+
+function field(id, label, value, opts = {}) {
+  const t = opts.type || 'number';
+  return `<div class="fld${opts.wide ? ' wide' : ''}"><label for="${id}">${label}</label>${opts.select ? `<select id="${id}" ${opts.bind ? `data-bind="${opts.bind}"` : ''} name="${id}">${opts.select}</select>` :
+    `<input id="${id}" name="${id}" type="${t}" ${t === 'number' ? 'inputmode="decimal" step="any" min="0"' : ''} value="${esc(value)}" ${opts.ph ? `placeholder="${esc(opts.ph)}"` : ''} ${opts.bind ? `data-bind="${opts.bind}"` : ''} ${opts.req ? 'required' : ''}>`}${opts.hint ? `<span class="hint">${opts.hint}</span>` : ''}</div>`;
+}
+
+function planView(C) {
+  const P = S.profile;
+  return `<section class="card"><div class="card-h"><div><h2>${tx('Monthly cash flow', 'กระแสเงินสดรายเดือน')}</h2><p class="sub">${tx('The balance sheet shows where you stand; cash flow shows where you are heading.', 'งบดุลบอกว่าคุณอยู่ตรงไหน กระแสเงินสดบอกว่าคุณกำลังไปทางไหน')}</p></div></div>
+    <div class="grid g2" style="gap:24px"><div class="fields">
+      ${field('p-income', tx('Monthly income before tax', 'รายได้ต่อเดือนก่อนหักภาษี'), P.income, { bind: 'profile.income', hint: tx('Salary or regular business income', 'เงินเดือนหรือรายได้ประจำ') })}
+      ${field('p-other', tx('Other monthly income', 'รายได้อื่นต่อเดือน'), P.otherIncome, { bind: 'profile.otherIncome', hint: tx('Rent, dividends, side work', 'ค่าเช่า เงินปันผล งานเสริม') })}
+      ${field('p-exp', tx('Monthly living expenses', 'ค่าใช้จ่ายต่อเดือน'), P.expenses, { bind: 'profile.expenses', hint: tx('Excluding debt payments, which come from Liabilities', 'ไม่รวมค่างวดหนี้ ซึ่งดึงจากแท็บหนี้สิน') })}
+      ${field('p-em', tx('Emergency fund target (months)', 'เป้าหมายเงินสำรอง (เดือน)'), P.emergencyTarget, { bind: 'profile.emergencyTarget' })}
+      ${field('p-age', tx('Your age', 'อายุ'), P.age, { bind: 'profile.age' })}
+      ${field('p-ret', tx('Planned retirement age', 'อายุที่ตั้งใจเกษียณ'), P.retireAge, { bind: 'profile.retireAge' })}
+      ${field('p-dep', tx('People who depend on you', 'จำนวนผู้อยู่ในอุปการะ'), P.dependents, { bind: 'profile.dependents' })}
+    </div><div id="planLive">${planLive(C)}</div></div></section>
+    <div id="planLive2">${ratiosBlock(C)}${sugBlock(C)}</div>
+    <section class="card"><div class="card-h"><div><h2>${tx('Financial goals', 'เป้าหมายทางการเงิน')}</h2><p class="sub">${tx('Give each goal a target and a date to see how much to save each month.', 'ตั้งยอดเงินและวันที่ เพื่อดูว่าต้องออมเดือนละเท่าไร')}</p></div><button type="button" class="btn pri" data-act="addGoal">+ ${tx('Add goal', 'เพิ่มเป้าหมาย')}</button></div>
+    <div id="goalsList">${goalsList(C)}</div></section>`;
+}
+function planLive(C) {
+  const P = S.profile, yrs = num(P.retireAge) - num(P.age);
+  return `<dl class="kv"><dt>${tx('Total income', 'รายได้รวม')}</dt><dd>${money(C.income)}</dd>
+    <dt>${tx('Living expenses', 'ค่าใช้จ่าย')}</dt><dd>− ${money(C.expenses)}</dd>
+    <dt>${tx('Debt payments', 'ค่างวดหนี้')}</dt><dd>− ${money(C.debtPay)}</dd><div class="sep"></div>
+    <dt><b>${tx('Left to save or invest', 'เหลือเก็บหรือลงทุน')}</b></dt><dd class="big num ${C.surplus < 0 ? 'down' : ''}" style="font-size:1.3rem">${money(C.surplus)}</dd>
+    <dt>${tx('Savings rate', 'อัตราการออม')}</dt><dd>${C.income ? pct(C.sr) : '–'}</dd>
+    <dt>${tx('Per year', 'ต่อปี')}</dt><dd>${money(C.surplus * 12)}</dd>
+    ${yrs > 0 ? `<dt>${tx('Years to retirement', 'ปีที่เหลือก่อนเกษียณ')}</dt><dd>${yrs}</dd>` : ''}</dl>
+    ${C.income ? `<div style="margin-top:14px"><div class="bar" style="height:10px;display:flex;gap:2px;background:none">${[[C.expenses, 'var(--c-personal)'], [C.debtPay, 'var(--c-debt)'], [Math.max(0, C.surplus), 'var(--accent)']].map(([v, c]) => `<span style="width:${(v / Math.max(C.income, C.outflow) * 100).toFixed(1)}%;background:${c}"></span>`).join('')}</div>
+    <div class="legend"><span><i style="background:var(--c-personal)"></i>${tx('Spending', 'ค่าใช้จ่าย')}</span><span><i style="background:var(--c-debt)"></i>${tx('Debt', 'หนี้')}</span><span><i style="background:var(--accent)"></i>${tx('Savings', 'เงินออม')}</span></div></div>` : ''}`;
+}
+function goalsList(C) {
+  if (!S.goals.length) return `<div class="empty">${tx('No goals yet. A home down payment, a trip or a child’s education are common first goals.', 'ยังไม่มีเป้าหมาย เช่น เงินดาวน์บ้าน ท่องเที่ยว หรือการศึกษาบุตร')}</div>`;
+  return S.goals.map(g => {
+    const left = Math.max(0, num(g.target) - num(g.saved)), m = monthsUntil(g.date), per = left / m, prog = num(g.target) ? Math.min(1, num(g.saved) / num(g.target)) : 0;
+    return `<div class="goal" role="button" tabindex="0" data-act="editGoal" data-v="${g.id}"><div class="line"><b>${esc(g.name)}</b><span class="num">${money(num(g.saved))} / ${money(num(g.target))}</span></div>
+      <div class="bar" style="height:7px"><span style="width:${(prog * 100).toFixed(1)}%;background:var(--accent)"></span></div>
+      <div class="line sub"><span>${fdate(g.date)} · ${m} ${tx('months', 'เดือน')}</span><span class="num">${left ? tx('Save', 'ออม') + ' ' + money(per) + tx('/mo', '/เดือน') : tx('Reached', 'ครบแล้ว')}</span></div></div>`;
+  }).join('');
+}
+
+function borrowView(C) {
+  const B = S.borrow;
+  const purposes = [['home', tx('Home', 'บ้าน/คอนโด')], ['car', tx('Car', 'รถยนต์')], ['other', tx('Other loan', 'สินเชื่ออื่น')]];
+  return `<section class="card"><div class="card-h"><div><h2>${tx('How much can I borrow or buy?', 'กู้ได้เท่าไร ซื้อได้แค่ไหน')}</h2><p class="sub">${tx('Banks look at how much of your income already goes to debt, and whether you have cash for the down payment.', 'ธนาคารพิจารณาว่ารายได้ของคุณถูกใช้ผ่อนหนี้ไปแล้วเท่าไร และมีเงินดาวน์เพียงพอหรือไม่')}</p></div>
+      <div class="seg" role="group">${purposes.map(([k, l]) => `<button type="button" data-act="purpose" data-v="${k}" aria-pressed="${B.purpose === k}">${l}</button>`).join('')}</div></div>
+    <div class="grid g2" style="gap:24px"><div class="fields">
+      ${field('b-income', tx('Monthly income (from Plan)', 'รายได้ต่อเดือน (จากแผนการเงิน)'), C.income, { bind: 'profile.income', hint: tx('Total income; other income is added on top', 'รายได้รวมจะบวกรายได้อื่นด้วย') })}
+      ${field('b-dsr', tx('Max share of income for all debts (%)', 'สัดส่วนผ่อนหนี้สูงสุดต่อรายได้ (%)'), B.dsr, { bind: 'borrow.dsr', hint: tx('Thai banks often allow 40–70% by income level; 40% is a safer plan', 'ธนาคารมักให้ 40–70% ตามระดับรายได้ ใช้ 40% จะปลอดภัยกว่า') })}
+      ${field('b-rate', tx('Interest rate (% per year, effective)', 'อัตราดอกเบี้ยเฉลี่ย (% ต่อปี)'), B.rate, { bind: 'borrow.rate', hint: B.purpose === 'car' ? tx('Car loans are often quoted as a flat rate; the effective rate is roughly 1.8× the flat rate', 'สินเชื่อรถมักคิดดอกเบี้ยแบบคงที่ (flat) ซึ่งเทียบเป็นอัตราที่แท้จริงประมาณ 1.8 เท่า') : tx('Use the average over the loan, not just the teaser rate', 'ใช้ดอกเบี้ยเฉลี่ยตลอดสัญญา ไม่ใช่เฉพาะช่วงโปรโมชัน') })}
+      ${field('b-years', tx('Loan term (years)', 'ระยะเวลากู้ (ปี)'), B.years, { bind: 'borrow.years' })}
+      ${field('b-ltv', tx('Loan-to-value (%)', 'สัดส่วนวงเงินกู้ต่อราคา LTV (%)'), B.ltv, { bind: 'borrow.ltv', hint: tx('Share of the price the bank lends; the rest is your down payment', 'สัดส่วนที่ธนาคารให้กู้ ส่วนที่เหลือคือเงินดาวน์') })}
+      ${field('b-costs', tx('Fees & transfer costs (% of price)', 'ค่าธรรมเนียมและค่าโอน (% ของราคา)'), B.costs, { bind: 'borrow.costs' })}
+      ${field('b-price', tx('Check a specific price', 'ตรวจสอบราคาที่สนใจ'), B.price, { bind: 'borrow.price', ph: tx('e.g. 3,500,000', 'เช่น 3500000'), wide: true })}
+    </div><div id="borrowLive">${borrowLive(C)}</div></div></section>
+    <section class="card"><h2>${tx('How this estimate works', 'วิธีคำนวณ')}</h2><div class="prose" style="margin-top:8px"><ul>
+      <li>${tx('Payment room = income × max debt share − your current debt payments.', 'ค่างวดที่ผ่อนเพิ่มได้ = รายได้ × สัดส่วนผ่อนหนี้สูงสุด − ค่างวดหนี้เดิม')}</li>
+      <li>${tx('Maximum loan = the amount that payment repays over the term at the interest rate.', 'วงเงินกู้สูงสุด = ยอดเงินที่ค่างวดนั้นผ่อนหมดได้ภายในระยะเวลาและดอกเบี้ยที่กำหนด')}</li>
+      <li>${tx(`Cash for the down payment = liquid assets minus your ${C.target}-month emergency fund, which should stay untouched.`, `เงินดาวน์ที่ใช้ได้ = สินทรัพย์สภาพคล่อง หักเงินสำรองฉุกเฉิน ${C.target} เดือน ซึ่งไม่ควรนำมาใช้`)}</li>
+      <li>${tx('The affordable price is the lower of what your income supports and what your cash supports.', 'ราคาที่ซื้อได้คือค่าที่ต่ำกว่าระหว่างกำลังผ่อนจากรายได้ กับกำลังจ่ายเงินดาวน์')}</li>
+      <li>${tx('Banks usually want the loan repaid by about age 65–70, and LTV limits are set by the Bank of Thailand and change over time. Confirm with your bank.', 'ธนาคารมักกำหนดให้ผ่อนหมดภายในอายุราว 65–70 ปี และเกณฑ์ LTV กำหนดโดยธนาคารแห่งประเทศไทยซึ่งปรับเปลี่ยนได้ ควรสอบถามธนาคารอีกครั้ง')}</li></ul></div></section>`;
+}
+function borrowLive(C) {
+  const b = borrowCalc(C);
+  if (!b.income) return `<div class="empty">${tx('Enter your monthly income to see an estimate.', 'กรอกรายได้ต่อเดือนเพื่อดูผลประเมิน')}</div>`;
+  const ck = b.check;
+  return `<p class="sub">${tx('Estimated price you can afford', 'ราคาที่น่าจะซื้อได้')}</p><p class="big num">${money(b.price)}</p>
+    <p class="note">${b.limit === 'income' ? tx('Limited by your income and existing debt.', 'ถูกจำกัดโดยรายได้และหนี้เดิม') : tx('Limited by the cash you have for the down payment and fees.', 'ถูกจำกัดโดยเงินสดสำหรับเงินดาวน์และค่าธรรมเนียม')}</p>
+    <dl class="kv" style="margin-top:12px">
+      <dt>${tx('Debt payments now', 'ค่างวดหนี้ปัจจุบัน')}</dt><dd>${money(C.debtPay)} (${pct(C.debtPay / b.income)})</dd>
+      <dt>${tx('Monthly payment room', 'ค่างวดที่ผ่อนเพิ่มได้')}</dt><dd>${money(b.room)}</dd>
+      <dt>${tx('Maximum loan', 'วงเงินกู้สูงสุด')}</dt><dd>${money(b.maxLoan)}</dd>
+      <dt>${tx('Price your income supports', 'ราคาตามกำลังผ่อน')}</dt><dd>${money(b.priceByLoan)}</dd>
+      <dt>${tx('Cash available for down payment', 'เงินสดที่ใช้ดาวน์ได้')}</dt><dd>${money(b.cash)}</dd>
+      <dt>${tx('Price your cash supports', 'ราคาตามเงินดาวน์')}</dt><dd>${isFinite(b.priceByCash) ? money(b.priceByCash) : tx('No limit', 'ไม่จำกัด')}</dd><div class="sep"></div>
+      <dt>${tx('Loan at that price', 'วงเงินกู้ที่ราคานี้')}</dt><dd>${money(b.loan)}</dd>
+      <dt>${tx('Term used', 'ระยะเวลาที่ใช้คำนวณ')}</dt><dd>${b.years} ${tx('years', 'ปี')}</dd>
+      <dt>${tx('Payment per 1,000,000 borrowed', 'ค่างวดต่อเงินกู้ 1 ล้าน')}</dt><dd>${money(b.per1m)}</dd></dl>
+    ${b.capped ? `<p class="note" style="margin-top:8px">${tx(`Term shortened to ${b.ageCap} years so the loan ends by age 70.`, `ลดระยะเวลากู้เหลือ ${b.ageCap} ปี เพื่อให้ผ่อนหมดภายในอายุ 70 ปี`)}</p>` : ''}
+    ${!b.room ? `<p class="note" style="margin-top:8px;color:var(--bad)">${tx('Your current debt payments already use the full limit. Paying down debt is the fastest way to raise your borrowing power.', 'ค่างวดหนี้ปัจจุบันเต็มเพดานแล้ว การลดหนี้คือวิธีที่เร็วที่สุดในการเพิ่มกำลังกู้')}</p>` : ''}
+    ${ck ? `<div class="card" style="margin-top:14px;background:var(--sunken)"><h3>${tx('At', 'ที่ราคา')} ${money(ck.p)}</h3>
+      <dl class="kv" style="margin-top:6px"><dt>${tx('Loan', 'วงเงินกู้')}</dt><dd>${money(ck.l)}</dd><dt>${tx('Monthly payment', 'ค่างวดต่อเดือน')}</dt><dd>${money(ck.pay)}</dd>
+      <dt>${tx('DSR after purchase', 'DSR หลังกู้')}</dt><dd><span class="pill ${ck.dsrOk ? 'good' : 'bad'}">${pct(ck.newDsr)}</span></dd>
+      <dt>${tx('Cash needed upfront', 'เงินสดที่ต้องใช้')}</dt><dd><span class="pill ${ck.cashOk ? 'good' : 'bad'}">${money(ck.needCash)}</span></dd></dl>
+      <p class="note" style="margin-top:6px">${ck.dsrOk && ck.cashOk ? tx('Within your limits.', 'อยู่ในกำลังที่รับได้') : !ck.dsrOk ? tx('The payment would push debt payments above your limit.', 'ค่างวดจะทำให้ภาระหนี้เกินเพดานที่ตั้งไว้') : tx(`You would need ${money(ck.needCash - b.cash)} more cash without touching your emergency fund.`, `ต้องมีเงินสดเพิ่มอีก ${money(ck.needCash - b.cash)} โดยไม่ใช้เงินสำรองฉุกเฉิน`)}</p></div>` : ''}`;
+}
+
+function learnView(C) {
+  const T = (en, th) => tx(en, th);
+  return `<div class="learn">
+  <section class="card"><div class="prose"><span class="eyebrow">${T('The basics', 'พื้นฐาน')}</span><h2>${T('What is a personal balance sheet?', 'งบดุลส่วนบุคคลคืออะไร')}</h2>
+    <p>${T('A personal balance sheet, also called a statement of financial position, lists everything you own and everything you owe on one specific date. It is a photograph of your finances at a moment in time. The difference between the two is your net worth.', 'งบดุลส่วนบุคคล หรืองบแสดงฐานะการเงิน คือการสรุปสิ่งที่คุณเป็นเจ้าของและหนี้ที่ต้องชำระ ณ วันใดวันหนึ่ง เปรียบเหมือนภาพถ่ายฐานะการเงินในช่วงเวลานั้น ส่วนต่างระหว่างสองอย่างคือความมั่งคั่งสุทธิ')}</p>
+    <div class="eq" style="margin-top:8px"><div style="background:var(--accent-soft)">${T('Assets', 'สินทรัพย์')}<small>${T('What you own', 'สิ่งที่คุณมี')}</small></div><span class="op">=</span><div style="background:var(--bad-soft)">${T('Liabilities', 'หนี้สิน')}<small>${T('What you owe', 'สิ่งที่คุณต้องจ่าย')}</small></div><span class="op">+</span><div style="background:var(--accent);color:var(--accent-ink)">${T('Net worth', 'ความมั่งคั่งสุทธิ')}<small>${T('What is truly yours', 'ส่วนที่เป็นของคุณจริง')}</small></div></div>
+    <p>${T(`Your sheet today: ${money(C.totalA)} = ${money(C.totalL)} + ${money(C.nw)}. Both sides always match, which is why it is called a balance sheet.`, `งบดุลของคุณวันนี้: ${money(C.totalA)} = ${money(C.totalL)} + ${money(C.nw)} ทั้งสองฝั่งเท่ากันเสมอ จึงเรียกว่างบดุล`)}</p></div></section>
+  <section class="card"><div class="prose"><h2>${T('Why it matters', 'ทำไมจึงสำคัญ')}</h2><ul>
+    <li>${T('It shows whether you are actually getting wealthier. A high income with high debt can still mean a low net worth.', 'บอกว่าคุณมั่งคั่งขึ้นจริงหรือไม่ รายได้สูงแต่หนี้สูง ความมั่งคั่งสุทธิก็อาจต่ำ')}</li>
+    <li>${T('It reveals risk: too little cash for emergencies, too much debt, or too much money in one place.', 'ชี้ให้เห็นความเสี่ยง เช่น เงินสำรองไม่พอ หนี้มากเกินไป หรือลงทุนกระจุกตัว')}</li>
+    <li>${T('Banks read the same numbers when you apply for a mortgage or car loan.', 'ธนาคารใช้ตัวเลขเหล่านี้พิจารณาเมื่อคุณขอสินเชื่อบ้านหรือรถ')}</li>
+    <li>${T('It is the starting point of every financial plan: you need to know where you are before deciding where to go.', 'เป็นจุดเริ่มต้นของการวางแผนการเงิน ต้องรู้ว่าอยู่ตรงไหนก่อนจะกำหนดว่าจะไปที่ใด')}</li></ul></div></section>
+  <div class="grid g2">
+  <section class="card"><div class="prose"><h2>${T('Three kinds of assets', 'สินทรัพย์ 3 ประเภท')}</h2>
+    ${['liquid', 'invest', 'personal'].map(g => `<p><b style="color:${GROUPS[g].c}">${nm(GROUPS[g].n)}</b><br>${nm(GROUPS[g].d)}. ${g === 'liquid' ? T('Savings, fixed deposits, money market funds. This is your safety net.', 'เงินฝาก เงินฝากประจำ กองทุนตลาดเงิน เป็นตาข่ายรองรับยามฉุกเฉิน') : g === 'invest' ? T('Stocks, funds, bonds, retirement funds, gold, rental property. These grow your wealth.', 'หุ้น กองทุน พันธบัตร กองทุนเกษียณ ทองคำ อสังหาฯ ให้เช่า ช่วยให้ความมั่งคั่งเติบโต') : T('Your home, car, and belongings. They have value but usually do not earn money, and cars lose value every year.', 'บ้าน รถ ของใช้ มีมูลค่าแต่ไม่สร้างรายได้ และรถจะเสื่อมราคาทุกปี')}</p>`).join('')}</div></section>
+  <section class="card"><div class="prose"><h2>${T('Two kinds of liabilities', 'หนี้สิน 2 ประเภท')}</h2>
+    <p><b>${nm(GROUPS.short.n)}</b><br>${T('Credit cards, cash cards, bills and anything due within 12 months. These usually carry the highest interest.', 'บัตรเครดิต บัตรกดเงินสด ค่าใช้จ่ายค้างจ่าย และหนี้ที่ต้องชำระภายใน 12 เดือน มักมีดอกเบี้ยสูงที่สุด')}</p>
+    <p><b>${nm(GROUPS.long.n)}</b><br>${T('Mortgages, car loans and student loans repaid over years. The payments due in the next 12 months count toward your liquidity needs.', 'สินเชื่อบ้าน รถ และเงินกู้การศึกษาที่ผ่อนหลายปี ค่างวดใน 12 เดือนข้างหน้านับรวมในความต้องการสภาพคล่อง')}</p>
+    <p><b>${T('Net worth (equity)', 'ความมั่งคั่งสุทธิ (ส่วนของเจ้าของ)')}</b><br>${T('What would be left if you sold everything and paid every debt. Growing it steadily is the goal.', 'สิ่งที่เหลือหากขายทุกอย่างและชำระหนี้ทั้งหมด เป้าหมายคือทำให้เพิ่มขึ้นอย่างสม่ำเสมอ')}</p></div></section></div>
+  <section class="card"><h2>${T('Key ratios and healthy ranges', 'อัตราส่วนสำคัญและเกณฑ์ที่ดี')}</h2><div class="scroll" style="margin-top:10px"><table class="ref"><thead><tr><th>${T('Ratio', 'อัตราส่วน')}</th><th>${T('Formula', 'สูตร')}</th><th>${T('Healthy range', 'เกณฑ์ที่ดี')}</th><th>${T('Yours', 'ของคุณ')}</th></tr></thead><tbody>
+    ${C.ratios.map(r => `<tr><td>${r.n}</td><td>${r.f}</td><td>${r.tgt}</td><td class="num"><span class="pill ${r.s}">${r.show}</span></td></tr>`).join('')}</tbody></table></div></section>
+  <div class="grid g2">
+  <section class="card"><div class="prose"><h2>${T('Balance sheet vs cash flow', 'งบดุลกับงบกระแสเงินสด')}</h2>
+    <p>${T('The balance sheet is a snapshot on one date. The cash flow statement (income and expenses) covers a period, such as a month. Saving from your cash flow is what grows the balance sheet; spending more than you earn shrinks it.', 'งบดุลคือภาพ ณ วันใดวันหนึ่ง ส่วนงบกระแสเงินสด (รายรับรายจ่าย) ครอบคลุมช่วงเวลา เช่น หนึ่งเดือน เงินออมจากกระแสเงินสดทำให้งบดุลเติบโต ส่วนการใช้จ่ายเกินรายได้ทำให้หดตัว')}</p></div></section>
+  <section class="card"><div class="prose"><h2>${T('Tips for accurate numbers', 'เคล็ดลับให้ตัวเลขแม่นยำ')}</h2><ul>
+    <li>${T('Use market value on the statement date: what you could sell it for today.', 'ใช้มูลค่าตลาด ณ วันที่จัดทำ คือราคาที่ขายได้วันนี้')}</li>
+    <li>${T('For loans, use the outstanding balance from your latest statement.', 'สำหรับหนี้ ใช้ยอดคงค้างจากใบแจ้งยอดล่าสุด')}</li>
+    <li>${T('For life insurance, use the cash surrender value, not the sum assured.', 'ประกันชีวิตใช้มูลค่าเวนคืนเงินสด ไม่ใช่ทุนประกัน')}</li>
+    <li>${T('Update every 6–12 months and save a snapshot so you can track progress.', 'อัปเดตทุก 6–12 เดือน และบันทึกสแนปช็อตเพื่อติดตามความก้าวหน้า')}</li></ul></div></section></div>
+  <section class="card"><div class="prose"><h2>${T('How to use this app', 'วิธีใช้แอปนี้')}</h2><ol style="margin:0;padding-left:1.2em;display:grid;gap:4px">
+    <li>${T('Add every asset in Assets, with today’s value.', 'เพิ่มสินทรัพย์ทั้งหมดในแท็บสินทรัพย์ พร้อมมูลค่าวันนี้')}</li>
+    <li>${T('Add every debt in Liabilities, with balance, rate and monthly payment.', 'เพิ่มหนี้ทั้งหมดในแท็บหนี้สิน พร้อมยอดคงค้าง ดอกเบี้ย และค่างวด')}</li>
+    <li>${T('Fill in income and spending in Plan to unlock ratios and suggestions.', 'กรอกรายได้และค่าใช้จ่ายในแท็บแผนการเงิน เพื่อดูอัตราส่วนและคำแนะนำ')}</li>
+    <li>${T('Check Borrowing power before applying for a home or car loan.', 'ตรวจสอบกำลังกู้ก่อนยื่นขอสินเชื่อบ้านหรือรถ')}</li>
+    <li>${T('Save a snapshot, then come back in six months to compare.', 'บันทึกสแนปช็อต แล้วกลับมาเปรียบเทียบในอีก 6 เดือน')}</li></ol></div></section>
+  </div>`;
+}
+
+/* ---------- Sheets (forms) ---------- */
+function openSheet(html) { $('sheetCard').innerHTML = html; $('sheet').hidden = false; const f = $('sheetCard').querySelector('input:not([type=hidden]),select'); if (f) setTimeout(() => f.focus(), 30); }
+function closeSheet() { $('sheet').hidden = true; $('sheetCard').innerHTML = ''; }
+function sheetFoot(canDelete) {
+  return `<div class="sheet-foot">${canDelete ? `<button type="button" class="btn danger spacer" data-act="del">${tx('Delete', 'ลบ')}</button>` : ''}<button type="button" class="btn" data-act="close">${tx('Cancel', 'ยกเลิก')}</button><button type="submit" class="btn pri">${tx('Save', 'บันทึก')}</button></div>`;
+}
+function catOptions(cats, sel, kind) {
+  const gs = kind === 'a' ? ['liquid', 'invest', 'personal'] : ['short', 'long'];
+  return gs.map(g => `<optgroup label="${esc(nm(GROUPS[g].n))}">${cats.filter(c => c.g === g).map(c => `<option value="${c.k}" ${c.k === sel ? 'selected' : ''}>${esc(nm(c.n))}</option>`).join('')}</optgroup>`).join('');
+}
+function openAsset(id, cat) {
+  const a = S.assets.find(x => x.id === id) || { id: '', cat: cat || 'cash', name: '', value: '', cost: '', rate: '', inst: '', note: '' };
+  const g = acat(a.cat).g;
+  openSheet(`<form id="f" data-kind="asset" data-id="${a.id}"><div style="display:grid;gap:16px"><h2>${a.id ? tx('Edit asset', 'แก้ไขสินทรัพย์') : tx('Add asset', 'เพิ่มสินทรัพย์')}</h2><div class="fields">
+    ${field('f-cat', tx('Type', 'ประเภท'), '', { select: catOptions(ACATS, a.cat, 'a'), wide: true })}
+    ${field('f-name', tx('Name', 'ชื่อรายการ'), a.name, { type: 'text', ph: tx('e.g. Savings account', 'เช่น บัญชีออมทรัพย์'), wide: true })}
+    ${field('f-value', tx('Current market value', 'มูลค่าตลาดปัจจุบัน'), a.value, { req: true, hint: tx('What you could sell it for today', 'ราคาที่ขายได้วันนี้') })}
+    ${field('f-cost', tx('Cost (what you paid)', 'ต้นทุน (ราคาที่ซื้อ)'), a.cost, { hint: tx('Optional, shows gain or loss', 'ไม่บังคับ ใช้แสดงกำไรขาดทุน') })}
+    ${field('f-rate', g === 'liquid' ? tx('Interest rate (% / yr)', 'อัตราดอกเบี้ย (% ต่อปี)') : tx('Expected return (% / yr)', 'ผลตอบแทนคาดหวัง (% ต่อปี)'), a.rate, { hint: tx('Optional', 'ไม่บังคับ') })}
+    ${field('f-inst', tx('Where it is held', 'สถาบันหรือที่ตั้ง'), a.inst, { type: 'text', ph: tx('Bank, broker, location', 'ธนาคาร โบรกเกอร์ หรือที่ตั้ง') })}
+    ${field('f-note', tx('Notes', 'หมายเหตุ'), a.note, { type: 'text', wide: true })}
+  </div>${sheetFoot(!!a.id)}</div></form>`);
+}
+function openLiab(id, cat) {
+  const l = S.liabilities.find(x => x.id === id) || { id: '', cat: cat || 'card', name: '', balance: '', rate: '', payment: '', months: '', lender: '', note: '' };
+  openSheet(`<form id="f" data-kind="liab" data-id="${l.id}"><div style="display:grid;gap:16px"><h2>${l.id ? tx('Edit liability', 'แก้ไขหนี้สิน') : tx('Add liability', 'เพิ่มหนี้สิน')}</h2><div class="fields">
+    ${field('f-cat', tx('Type', 'ประเภท'), '', { select: catOptions(LCATS, l.cat, 'l'), wide: true })}
+    ${field('f-name', tx('Name', 'ชื่อรายการ'), l.name, { type: 'text', ph: tx('e.g. Home loan', 'เช่น สินเชื่อบ้าน'), wide: true })}
+    ${field('f-balance', tx('Outstanding balance', 'ยอดหนี้คงค้าง'), l.balance, { req: true })}
+    ${field('f-rate', tx('Interest rate (% / yr)', 'อัตราดอกเบี้ย (% ต่อปี)'), l.rate)}
+    ${field('f-payment', tx('Monthly payment', 'ค่างวดต่อเดือน'), l.payment, { hint: tx('Leave blank to estimate from rate and months', 'เว้นว่างเพื่อคำนวณจากดอกเบี้ยและจำนวนเดือน') })}
+    ${field('f-months', tx('Months remaining', 'จำนวนเดือนที่เหลือ'), l.months, { hint: tx('Optional', 'ไม่บังคับ') })}
+    ${field('f-lender', tx('Lender', 'ผู้ให้กู้'), l.lender, { type: 'text' })}
+    ${field('f-note', tx('Notes', 'หมายเหตุ'), l.note, { type: 'text' })}
+  </div>${sheetFoot(!!l.id)}</div></form>`);
+}
+function openGoal(id) {
+  const g = S.goals.find(x => x.id === id) || { id: '', name: '', target: '', saved: '', date: (new Date().getFullYear() + 2) + '-01-01' };
+  openSheet(`<form id="f" data-kind="goal" data-id="${g.id}"><div style="display:grid;gap:16px"><h2>${g.id ? tx('Edit goal', 'แก้ไขเป้าหมาย') : tx('Add goal', 'เพิ่มเป้าหมาย')}</h2><div class="fields">
+    ${field('f-name', tx('Goal', 'เป้าหมาย'), g.name, { type: 'text', req: true, ph: tx('e.g. Home down payment', 'เช่น เงินดาวน์บ้าน'), wide: true })}
+    ${field('f-target', tx('Target amount', 'จำนวนเงินเป้าหมาย'), g.target, { req: true })}
+    ${field('f-saved', tx('Saved so far', 'ออมแล้ว'), g.saved)}
+    ${field('f-date', tx('Target date', 'วันที่ต้องการ'), g.date, { type: 'date', req: true })}
+  </div>${sheetFoot(!!g.id)}</div></form>`);
+}
+function openSettings() {
+  openSheet(`<form id="f" data-kind="settings"><div style="display:grid;gap:16px"><h2>${tx('Settings & data', 'ตั้งค่าและข้อมูล')}</h2><div class="fields">
+    ${field('s-owner', tx('Prepared for', 'จัดทำสำหรับ'), S.owner, { type: 'text', ph: tx('Your name (optional)', 'ชื่อของคุณ (ไม่บังคับ)') })}
+    ${field('s-asof', tx('Statement date (as of)', 'ณ วันที่'), S.asOf || TODAY, { type: 'date' })}
+    ${field('s-cur', tx('Currency', 'สกุลเงิน'), '', { select: CURRENCIES.map(c => `<option ${c === S.currency ? 'selected' : ''}>${c}</option>`).join('') })}
+  </div>
+  <div style="display:grid;gap:8px"><h3>${tx('Back up or move your data', 'สำรองหรือย้ายข้อมูล')}</h3><p class="note">${tx('Your data stays in this browser only. Copy the backup text below and keep it somewhere safe, or paste a backup here and choose Restore.', 'ข้อมูลเก็บไว้ในเบราว์เซอร์นี้เท่านั้น คัดลอกข้อความสำรองด้านล่างเก็บไว้ หรือวางข้อความสำรองแล้วกดกู้คืน')}</p>
+    <label class="sr" for="s-json" hidden>JSON</label><textarea id="s-json" spellcheck="false">${esc(JSON.stringify({ ...S, tab: 'overview' }))}</textarea>
+    <div class="toolbar"><button type="button" class="btn" data-act="copyJson">${tx('Copy backup', 'คัดลอกข้อมูลสำรอง')}</button><button type="button" class="btn" data-act="restoreJson">${tx('Restore from text', 'กู้คืนจากข้อความ')}</button>
+      <label class="btn" for="s-file">${tx('Restore from file', 'กู้คืนจากไฟล์')}</label><input type="file" id="s-file" accept=".json,application/json" hidden></div></div>
+  <div style="display:grid;gap:8px"><h3>${tx('Start over', 'เริ่มใหม่')}</h3><div class="toolbar"><button type="button" class="btn" data-act="loadSample">${tx('Load example data', 'โหลดข้อมูลตัวอย่าง')}</button><button type="button" class="btn danger" data-act="clearAll">${tx('Clear all data', 'ลบข้อมูลทั้งหมด')}</button></div></div>
+  <div class="sheet-foot"><button type="button" class="btn" data-act="close">${tx('Close', 'ปิด')}</button><button type="submit" class="btn pri">${tx('Save', 'บันทึก')}</button></div></div></form>`);
+}
+
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => t.hidden = true, 2200); }
+function touched() { if (S.isSample) S.isSample = false; }
+function confirmBtn(btn, fn) {
+  if (btn.classList.contains('armed')) { fn(); return; }
+  btn.classList.add('armed'); const orig = btn.textContent; btn.textContent = tx('Tap again to confirm', 'กดอีกครั้งเพื่อยืนยัน');
+  setTimeout(() => { if (btn.isConnected) { btn.classList.remove('armed'); btn.textContent = orig; } }, 3000);
+}
+function restore(text) {
+  try { const d = JSON.parse(text); if (!d || !Array.isArray(d.assets)) throw 0; S = Object.assign(blank(), d, { v: 1, isSample: false }); save(); closeSheet(); render(); toast(tx('Data restored', 'กู้คืนข้อมูลแล้ว')); }
+  catch (e) { toast(tx('That backup could not be read. Paste the full text you copied.', 'อ่านข้อมูลสำรองไม่ได้ กรุณาวางข้อความทั้งหมดที่คัดลอกไว้')); }
+}
+
+/* ---------- Events ---------- */
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if (!el) { if (e.target === $('sheet')) closeSheet(); return; }
+  const act = el.dataset.act, v = el.dataset.v;
+  switch (act) {
+    case 'lang': S.lang = v; save(); render(); break;
+    case 'tab': S.tab = v; save(); render(); window.scrollTo({ top: 0 }); break;
+    case 'settings': openSettings(); break;
+    case 'close': closeSheet(); break;
+    case 'addAsset': openAsset(null, v); break;
+    case 'editAsset': openAsset(v); break;
+    case 'addLiab': openLiab(null, v); break;
+    case 'editLiab': openLiab(v); break;
+    case 'addGoal': openGoal(); break;
+    case 'editGoal': openGoal(v); break;
+    case 'purpose': { const p = PURPOSE[v]; Object.assign(S.borrow, { purpose: v, rate: p.rate, years: p.years, ltv: p.ltv, costs: p.costs }); save(); render(); break; }
+    case 'startOwn': { const keep = { lang: S.lang, currency: S.currency }; S = Object.assign(blank(), keep, { tab: 'assets' }); save(); render(); toast(tx('Example data cleared. Add your first asset.', 'ล้างข้อมูลตัวอย่างแล้ว เริ่มเพิ่มสินทรัพย์รายการแรกได้เลย')); break; }
+    case 'snapshot': { const C = calc(); S.snapshots = S.snapshots.filter(s => s.date !== TODAY); S.snapshots.push({ date: TODAY, a: C.totalA, l: C.totalL }); touched(); save(); render(); toast(tx('Snapshot saved for today', 'บันทึกสแนปช็อตวันนี้แล้ว')); break; }
+    case 'del': confirmBtn(el, () => {
+      const f = $('f'), id = f.dataset.id, k = f.dataset.kind;
+      if (k === 'asset') S.assets = S.assets.filter(x => x.id !== id); else if (k === 'liab') S.liabilities = S.liabilities.filter(x => x.id !== id); else S.goals = S.goals.filter(x => x.id !== id);
+      touched(); save(); closeSheet(); render(); toast(tx('Deleted', 'ลบแล้ว'));
+    }); break;
+    case 'copyJson': { const ta = $('s-json'); const done = () => toast(tx('Backup copied', 'คัดลอกแล้ว')); try { navigator.clipboard.writeText(ta.value).then(done, () => { ta.select(); toast(tx('Text selected. Copy it with your keyboard.', 'เลือกข้อความแล้ว กดคัดลอกด้วยแป้นพิมพ์')); }); } catch (err) { ta.select(); } break; }
+    case 'restoreJson': restore($('s-json').value); break;
+    case 'loadSample': confirmBtn(el, () => { const keep = { lang: S.lang, currency: S.currency }; S = Object.assign(sample(), keep); save(); closeSheet(); render(); }); break;
+    case 'clearAll': confirmBtn(el, () => { const keep = { lang: S.lang }; S = Object.assign(blank(), keep); save(); closeSheet(); render(); toast(tx('All data cleared', 'ลบข้อมูลทั้งหมดแล้ว')); }); break;
+  }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !$('sheet').hidden) closeSheet();
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.row[data-act], .goal[data-act]')) { e.preventDefault(); e.target.click(); }
+});
+document.addEventListener('change', e => {
+  if (e.target.id === 's-file' && e.target.files[0]) { const r = new FileReader(); r.onload = () => restore(r.result); r.readAsText(e.target.files[0]); }
+});
+document.addEventListener('input', e => {
+  const b = e.target.dataset && e.target.dataset.bind; if (!b) return;
+  const [obj, key] = b.split('.');
+  if (e.target.id === 'b-income') { S.profile.income = Math.max(0, num(e.target.value) - num(S.profile.otherIncome)); }
+  else S[obj][key] = e.target.value;
+  touched(); save();
+  const C = calc();
+  if ($('planLive')) { $('planLive').innerHTML = planLive(C); $('planLive2').innerHTML = ratiosBlock(C) + sugBlock(C); $('goalsList').innerHTML = goalsList(C); }
+  if ($('borrowLive')) $('borrowLive').innerHTML = borrowLive(C);
+});
+document.addEventListener('submit', e => {
+  e.preventDefault();
+  const f = e.target, k = f.dataset.kind, id = f.dataset.id, val = n => { const el = f.querySelector('#' + n); return el ? el.value.trim() : ''; };
+  if (k === 'settings') {
+    S.owner = val('s-owner'); S.asOf = val('s-asof') || TODAY; S.currency = val('s-cur') || 'THB';
+    save(); closeSheet(); render(); toast(tx('Settings saved', 'บันทึกการตั้งค่าแล้ว')); return;
+  }
+  if (k === 'asset') {
+    const rec = { id: id || uid(), cat: val('f-cat'), name: val('f-name'), value: num(val('f-value')), cost: val('f-cost') === '' ? '' : num(val('f-cost')), rate: val('f-rate') === '' ? '' : num(val('f-rate')), inst: val('f-inst'), note: val('f-note') };
+    const i = S.assets.findIndex(x => x.id === rec.id); i >= 0 ? S.assets[i] = rec : S.assets.push(rec);
+  } else if (k === 'liab') {
+    let payment = val('f-payment');
+    const rec = { id: id || uid(), cat: val('f-cat'), name: val('f-name'), balance: num(val('f-balance')), rate: num(val('f-rate')), payment: 0, months: val('f-months') === '' ? '' : num(val('f-months')), lender: val('f-lender'), note: val('f-note') };
+    if (payment === '' && num(rec.months) > 0) payment = Math.round(pmt(rec.balance, rec.rate, num(rec.months)));
+    rec.payment = num(payment);
+    const i = S.liabilities.findIndex(x => x.id === rec.id); i >= 0 ? S.liabilities[i] = rec : S.liabilities.push(rec);
+  } else if (k === 'goal') {
+    const rec = { id: id || uid(), name: val('f-name'), target: num(val('f-target')), saved: num(val('f-saved')), date: val('f-date') };
+    const i = S.goals.findIndex(x => x.id === rec.id); i >= 0 ? S.goals[i] = rec : S.goals.push(rec);
+  }
+  touched(); save(); closeSheet(); render(); toast(tx('Saved', 'บันทึกแล้ว'));
+});
+
+const h = (location.hash || '').slice(1);
+if (TABS.some(t => t[0] === h)) S.tab = h;
+render();
+})();
+</script>
+
+<script>if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));</script>
+</body>
+</html>
