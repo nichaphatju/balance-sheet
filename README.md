@@ -22,7 +22,19 @@ npm run preview    # serve the dist/ build locally
 ```
 
 `dist/` is a static site — host it on any static host (GitHub Pages, Netlify,
-Vercel, etc.).
+Vercel, Firebase Hosting, etc.).
+
+## Deploy to Firebase Hosting
+
+The project is wired to Firebase project `the-balance-sheet` (see `.firebaserc`).
+One-time setup, then each deploy:
+
+```
+npm install -g firebase-tools   # if not already installed
+firebase login                  # opens a browser to authenticate
+npm run build                   # produces dist/
+firebase deploy --only hosting
+```
 
 ## Project layout
 
