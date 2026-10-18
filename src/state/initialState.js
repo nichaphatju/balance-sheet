@@ -12,6 +12,7 @@ export function blank() {
     isSample: false,
     owner: '',
     asOf: TODAY,
+    lastBackupAt: null,
     profile: { income: '', otherIncome: '', expenses: '', age: '', retireAge: 60, dependents: 0, emergencyTarget: 6 },
     assets: [],
     liabilities: [],

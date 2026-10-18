@@ -11,6 +11,9 @@ calculator, and a short "learn" section.
 - Plain CSS with custom properties for theming (light/dark), no CSS framework.
 - 100% client-side: all data is stored in the browser's `localStorage`
   (key `personal-balance-sheet.v1`). Nothing is sent to a server.
+- Installable PWA with offline support via `vite-plugin-pwa` — after one
+  online visit, the app shell is cached and keeps working without a network
+  connection.
 
 ## Development
 
@@ -51,4 +54,7 @@ firebase deploy --only hosting
 ## Backup & data portability
 
 Settings → "Back up or move your data" exports/imports the full state as
-JSON, since nothing is stored outside the browser.
+JSON, since nothing is stored outside the browser. A suggestion reminds you
+to back up if it's been more than 30 days. Settings → "Export to
+spreadsheet" also downloads a CSV for reading in Excel/Sheets (not a full
+backup — see `docs/PIPELINE.md`).

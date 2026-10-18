@@ -4,6 +4,31 @@ Dated log of completed work on this project. Newest first. This is a record
 of *what shipped and why*, not a task list — see `ROADMAP.md` for planned
 work.
 
+## 2026-10-18 — Backup reminder + offline PWA (roadmap #1 and #2)
+
+- **Backup-loss warning**: added `S.lastBackupAt`, set via a new
+  `MARK_BACKED_UP` action whenever "Copy backup" succeeds in Settings. The
+  Settings sheet now shows "Last backed up [date]" / "Never backed up" next
+  to the backup section (same pattern as the snapshot "last saved"
+  indicator), and `suggestions()` surfaces a `warn`-level nudge if it's
+  unset or more than 30 days old — shorter than the existing 180-day
+  stale-snapshot threshold, since data loss here is total and irreversible
+  rather than just a gap in the trend chart.
+- **Offline-capable installable PWA**: added `vite-plugin-pwa` (devDependency,
+  chosen over a hand-written service worker for correct precache/cache-
+  invalidation behavior on each deploy — see the roadmap decision). It
+  generates a Workbox service worker (`registerType: 'autoUpdate'`) that
+  precaches the app shell, and generates `manifest.webmanifest` from config
+  in `vite.config.js` (removed the old static `public/manifest.webmanifest`
+  and its manual `<link>` tag to avoid duplication). Switched `base` from
+  `'./'` to `'/'` for correct service-worker scope/manifest resolution —
+  safe since the app is only ever deployed to a Firebase Hosting domain
+  root. Verified: service worker registers and activates, all 6 app-shell
+  entries precache correctly, and the generated `NavigationRoute` serves
+  `index.html` from cache for the SPA's hash-based routing.
+- Both verified end-to-end in a real browser (production build via
+  `vite preview`), not just a successful `npm run build`.
+
 ## 2026-10-18 — Theme refresh, snapshot UX fix, CSV export, support link
 
 - **Theme**: replaced the original bank-green palette with a warmer,

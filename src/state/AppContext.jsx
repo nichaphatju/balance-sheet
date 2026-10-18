@@ -41,6 +41,7 @@ export function AppProvider({ children }) {
     setTotalIncome: value => dispatch({ type: 'SET_TOTAL_INCOME', value }),
     setPurpose: (purpose, defaults) => dispatch({ type: 'SET_PURPOSE', purpose, defaults }),
     saveSettings: (owner, asOf, currency) => dispatch({ type: 'SAVE_SETTINGS', owner, asOf, currency }),
+    markBackedUp: () => dispatch({ type: 'MARK_BACKED_UP' }),
     startOwn: () => dispatch({ type: 'START_OWN' }),
     saveSnapshot: () => dispatch({ type: 'SAVE_SNAPSHOT', totalA: C.totalA, totalL: C.totalL }),
     upsertAsset: rec => dispatch({ type: 'UPSERT_ASSET', rec }),

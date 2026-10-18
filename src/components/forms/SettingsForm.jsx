@@ -37,10 +37,14 @@ export default function SettingsForm() {
 
   const copyJson = () => {
     navigator.clipboard?.writeText(json).then(
-      () => toast(fx.t('Backup copied', 'คัดลอกแล้ว')),
+      () => { actions.markBackedUp(); toast(fx.t('Backup copied', 'คัดลอกแล้ว')); },
       () => toast(fx.t('Text selected. Copy it with your keyboard.', 'เลือกข้อความแล้ว กดคัดลอกด้วยแป้นพิมพ์'))
     );
   };
+
+  const lastBackupHint = S.lastBackupAt
+    ? fx.t(`Last backed up ${fx.fdate(S.lastBackupAt)}`, `สำรองล่าสุด ${fx.fdate(S.lastBackupAt)}`)
+    : fx.t('Never backed up', 'ยังไม่เคยสำรองข้อมูล');
 
   const onFile = e => {
     const file = e.target.files[0];
@@ -72,7 +76,10 @@ export default function SettingsForm() {
         </div>
 
         <div style={{ display: 'grid', gap: 8 }}>
-          <h3>{fx.t('Back up or move your data', 'สำรองหรือย้ายข้อมูล')}</h3>
+          <div className="card-h" style={{ marginBottom: 0 }}>
+            <h3>{fx.t('Back up or move your data', 'สำรองหรือย้ายข้อมูล')}</h3>
+            <span className="sub">{lastBackupHint}</span>
+          </div>
           <p className="note">{fx.t('Your data stays in this browser only. Copy the backup text below and keep it somewhere safe, or paste a backup here and choose Restore.', 'ข้อมูลเก็บไว้ในเบราว์เซอร์นี้เท่านั้น คัดลอกข้อความสำรองด้านล่างเก็บไว้ หรือวางข้อความสำรองแล้วกดกู้คืน')}</p>
           <textarea id="s-json" spellCheck="false" value={json} onChange={e => setJson(e.target.value)} />
           <div className="toolbar">

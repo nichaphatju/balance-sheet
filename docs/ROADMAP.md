@@ -11,15 +11,9 @@ there).
 
 ## High impact — trust, safety, who can use this at all
 
-- [ ] **Backup-loss warning.** Data lives only in one browser; clearing site
-      data, switching device/browser, or a reinstall wipes it silently with
-      no warning today. Add a "last backed up: X" indicator (same pattern as
-      the snapshot "last saved" fix) and a periodic nudge, mirroring the
-      existing stale-snapshot suggestion.
-- [ ] **True offline PWA.** `manifest.webmanifest` exists but there is no
-      service worker anywhere in the code — "Add to Home Screen" works, but
-      the installed app won't function offline. Add a minimal app-shell
-      service worker.
+- [x] **Backup-loss warning.** Shipped 2026-10-18 — see `CHANGELOG.md`.
+- [x] **True offline PWA.** Shipped 2026-10-18 via `vite-plugin-pwa` — see
+      `CHANGELOG.md`.
 - [ ] **Mobile UX audit.** No dedicated pass has been done since the React
       refactor on narrow-width behavior for the two-column Statement table,
       ratio grids, and SVG charts. Likely the primary device for this

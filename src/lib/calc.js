@@ -125,6 +125,8 @@ export function suggestions(S, C) {
 
   const last = S.snapshots.map(s => s.date).sort().pop();
   if (!last || (Date.now() - new Date(last).getTime()) / 864e5 > 180) add('info', tx('Save a snapshot of today’s balance sheet', 'บันทึกงบดุลของวันนี้'), tx('Snapshots let you see whether net worth is rising. Update your balance sheet every 6–12 months, or after a big event such as buying a home.', 'การบันทึกไว้ช่วยให้เห็นว่าความมั่งคั่งเพิ่มขึ้นหรือไม่ ควรอัปเดตทุก 6–12 เดือน หรือเมื่อมีเหตุการณ์สำคัญ เช่น ซื้อบ้าน'));
+
+  if (!S.lastBackupAt || (Date.now() - new Date(S.lastBackupAt).getTime()) / 864e5 > 30) add('warn', tx('Back up your data', 'สำรองข้อมูลของคุณ'), tx('Your data is saved only in this browser. If you clear your browser data or switch devices without a backup, it is gone for good. Open Settings & data and copy your backup text somewhere safe.', 'ข้อมูลของคุณถูกเก็บไว้ในเบราว์เซอร์นี้เท่านั้น หากล้างข้อมูลเบราว์เซอร์หรือเปลี่ยนอุปกรณ์โดยไม่ได้สำรองไว้ก่อน ข้อมูลจะหายไปอย่างถาวร เปิดเมนูตั้งค่าและข้อมูล แล้วคัดลอกข้อความสำรองเก็บไว้ในที่ปลอดภัย'));
   if (!out.some(o => o.s === 'bad' || o.s === 'warn')) add('good', tx('Your finances look healthy', 'สถานะการเงินอยู่ในเกณฑ์ดี'), tx('All key ratios are within healthy ranges. Keep investing regularly and review once or twice a year.', 'อัตราส่วนสำคัญอยู่ในเกณฑ์ดี ลงทุนต่อเนื่องและทบทวนปีละ 1–2 ครั้ง'));
 
   const order = { bad: 0, warn: 1, info: 2, good: 3 };

@@ -27,6 +27,8 @@ function apply(S, action) {
       return { ...S, borrow: { ...S.borrow, purpose: action.purpose, ...action.defaults } };
     case 'SAVE_SETTINGS':
       return { ...S, owner: action.owner, asOf: action.asOf || TODAY, currency: action.currency || 'THB' };
+    case 'MARK_BACKED_UP':
+      return { ...S, lastBackupAt: TODAY };
     case 'START_OWN':
       return Object.assign(blank(), { lang: S.lang, currency: S.currency, tab: 'assets' });
     case 'SAVE_SNAPSHOT': {

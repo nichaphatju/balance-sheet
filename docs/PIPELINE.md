@@ -14,6 +14,14 @@ change, not after.
 - **Plain CSS** — custom properties (design tokens) in `src/styles/index.css`
   for theming (light/dark), no CSS framework.
 - **Firebase Hosting** — static hosting for the production build.
+- **`vite-plugin-pwa`** — generates the service worker (Workbox
+  `generateSW` strategy) and `manifest.webmanifest` at build time. Precaches
+  the app shell (JS/CSS/HTML/icon) so the installed app keeps working
+  offline after one online visit; `registerType: 'autoUpdate'` means new
+  deploys take over silently on next load, no "update available" prompt UI.
+  Manifest content is defined inline in `vite.config.js`, not in
+  `public/` — don't add a static `public/manifest.webmanifest`, it would be
+  overwritten/duplicated by the generated one.
 
 This split (Node for build only, fully static output) was a deliberate choice
 made when the vanilla-JS app was refactored to Vite + React, to keep the app
@@ -24,6 +32,10 @@ deployable to any static host with no server/backend to run or pay for.
 - All user data lives in the browser's `localStorage`, under the key
   `personal-balance-sheet.v1` (see `src/state/initialState.js`). There is no
   backend, no database, no sync between devices.
+- `S.lastBackupAt` (date string, set via the `MARK_BACKED_UP` action) tracks
+  when the user last used "Copy backup". `suggestions()` in `src/lib/calc.js`
+  surfaces a warning if it's unset or more than 30 days old — the same
+  pattern as the existing stale-snapshot reminder.
 - This means: data loads automatically on return visits to the same browser
   profile, survives restarts, but is lost if the user clears site data or
   switches browser/device — there is no server-side copy.
@@ -47,6 +59,12 @@ npm run preview   # serve the dist/ build locally
 
 Project: `the-balance-sheet` (see `.firebaserc`). Hosting config in
 `firebase.json` (serves `dist/`, SPA rewrite to `index.html`).
+
+`vite.config.js` uses `base: '/'` (root-absolute), not a relative base —
+required for the service worker's scope and the PWA manifest's `start_url`
+to resolve correctly. This assumes the site is always served from a
+domain root, which is true for Firebase Hosting; deploying to a non-root
+path (e.g. a GitHub Pages project subpath) would need `base` revisited.
 
 ```
 npm run build
