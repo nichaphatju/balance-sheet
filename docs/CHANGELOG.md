@@ -28,6 +28,16 @@ work.
   `index.html` from cache for the SPA's hash-based routing.
 - Both verified end-to-end in a real browser (production build via
   `vite preview`), not just a successful `npm run build`.
+- **Cache-header fix** (`firebase.json`): Firebase Hosting's default
+  `max-age=3600` was applying to `sw.js`, `index.html`, and
+  `manifest.webmanifest`, meaning a browser could serve a stale service
+  worker/entry point for up to an hour after a deploy — undermining the
+  `autoUpdate` registration type. Added explicit `no-cache` for those plus
+  `/` (the root path, since the SPA rewrite's header matching is based on
+  the *requested* path, not the rewritten destination), and a long
+  `immutable` cache for the content-hashed `assets/**` and `workbox-*.js`
+  files, which are safe to cache forever. Verified live via `curl -I`
+  against the deployed site after each change.
 
 ## 2026-10-18 — Theme refresh, snapshot UX fix, CSV export, support link
 
