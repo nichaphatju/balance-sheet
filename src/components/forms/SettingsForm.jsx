@@ -3,11 +3,12 @@ import { useApp } from '../../state/AppContext.jsx';
 import { useUi } from '../../state/UiContext.jsx';
 import { CURRENCIES } from '../../lib/categories.js';
 import { TODAY } from '../../state/initialState.js';
+import { buildCsv, downloadCsv } from '../../lib/exportCsv.js';
 import Field from '../Field.jsx';
 import ConfirmButton from '../ConfirmButton.jsx';
 
 export default function SettingsForm() {
-  const { S, fx, actions } = useApp();
+  const { S, C, fx, actions } = useApp();
   const { closeSheet, toast } = useUi();
   const [owner, setOwner] = useState(S.owner);
   const [asOf, setAsOf] = useState(S.asOf || TODAY);
@@ -49,6 +50,13 @@ export default function SettingsForm() {
     reader.readAsText(file);
   };
 
+  const exportCsv = () => {
+    const csv = buildCsv(S, C, fx);
+    const name = `balance-sheet-${S.asOf || TODAY}.csv`;
+    downloadCsv(name, csv);
+    toast(fx.t('Spreadsheet downloaded', 'ดาวน์โหลดไฟล์แล้ว'));
+  };
+
   return (
     <form onSubmit={onSubmit}>
       <div style={{ display: 'grid', gap: 16 }}>
@@ -72,6 +80,14 @@ export default function SettingsForm() {
             <button type="button" className="btn" onClick={() => restore(json)}>{fx.t('Restore from text', 'กู้คืนจากข้อความ')}</button>
             <button type="button" className="btn" onClick={() => fileInput.current?.click()}>{fx.t('Restore from file', 'กู้คืนจากไฟล์')}</button>
             <input ref={fileInput} type="file" accept=".json,application/json" hidden onChange={onFile} />
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gap: 8 }}>
+          <h3>{fx.t('Export to spreadsheet', 'ส่งออกเป็นสเปรดชีต')}</h3>
+          <p className="note">{fx.t('Download assets, liabilities, goals and snapshots as a CSV file that opens in Excel, Google Sheets or Numbers.', 'ดาวน์โหลดสินทรัพย์ หนี้สิน เป้าหมาย และสแนปช็อต เป็นไฟล์ CSV เปิดได้ใน Excel, Google Sheets หรือ Numbers')}</p>
+          <div className="toolbar">
+            <button type="button" className="btn" onClick={exportCsv}>{fx.t('Export CSV', 'ส่งออก CSV')}</button>
           </div>
         </div>
 

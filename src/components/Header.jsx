@@ -28,6 +28,15 @@ export default function Header() {
               <button type="button" aria-pressed={S.lang === 'en'} onClick={() => actions.setLang('en')}>EN</button>
               <button type="button" aria-pressed={S.lang === 'th'} onClick={() => actions.setLang('th')}>ไทย</button>
             </div>
+            <a
+              className="iconbtn"
+              href="https://buymeacoffee.com/ncp_gie"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ textDecoration: 'none' }}
+            >
+              {fx.t('☕ Buy me a coffee', '☕ เลี้ยงกาแฟ')}
+            </a>
             <button type="button" className="iconbtn" onClick={openSettings}>{fx.t('Settings & data', 'ตั้งค่าและข้อมูล')}</button>
           </div>
         </div>

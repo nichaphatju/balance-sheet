@@ -103,6 +103,24 @@ export default function LearnView() {
             <li>{T('Check Borrowing power before applying for a home or car loan.', 'ตรวจสอบกำลังกู้ก่อนยื่นขอสินเชื่อบ้านหรือรถ')}</li>
             <li>{T('Save a snapshot, then come back in six months to compare.', 'บันทึกสแนปช็อต แล้วกลับมาเปรียบเทียบในอีก 6 เดือน')}</li>
           </ol>
+          <p className="note" style={{ marginTop: 8 }}>
+            {T(
+              'Everything you type is saved automatically in this browser as you go — there is no save button, and nothing is lost when you close the tab, close the browser, or restart your computer. It stays there until you clear this browser’s data or open the app on a different browser or device.',
+              'ทุกอย่างที่คุณกรอกจะถูกบันทึกอัตโนมัติในเบราว์เซอร์นี้ทันที ไม่มีปุ่มบันทึกและไม่มีข้อมูลสูญหายแม้ปิดแท็บ ปิดเบราว์เซอร์ หรือรีสตาร์ทเครื่อง ข้อมูลจะยังอยู่จนกว่าคุณจะล้างข้อมูลเบราว์เซอร์นี้ หรือเปิดแอปจากเบราว์เซอร์หรืออุปกรณ์อื่น'
+            )}
+          </p>
+          <p className="note">
+            {T(
+              '"Save snapshot" is different from saving your data — it records today’s totals as one point on the net-worth chart, so you can see your trend over time. Skipping it does not lose any data; it just means that chart has fewer points.',
+              '"บันทึกสแนปช็อต" ไม่เหมือนกับการบันทึกข้อมูล แต่เป็นการบันทึกยอดรวมของวันนี้ไว้เป็นจุดหนึ่งบนกราฟความมั่งคั่งสุทธิ เพื่อดูแนวโน้มในอนาคต หากไม่กดก็ไม่เสียข้อมูลใด ๆ เพียงแต่กราฟจะมีจุดน้อยลง'
+            )}
+          </p>
+          <p className="note">
+            {T(
+              'Switching to a different browser or device, or clearing this browser’s site data, does start you with a blank sheet — use Settings & data → "Back up or move your data" beforehand to copy your data over.',
+              'หากเปลี่ยนเบราว์เซอร์หรืออุปกรณ์ หรือล้างข้อมูลเว็บไซต์ของเบราว์เซอร์นี้ คุณจะเริ่มต้นด้วยข้อมูลว่างเปล่า ใช้เมนู ตั้งค่าและข้อมูล → "สำรองหรือย้ายข้อมูล" ก่อนล่วงหน้าเพื่อคัดลอกข้อมูลของคุณไป'
+            )}
+          </p>
         </div>
       </section>
     </div>

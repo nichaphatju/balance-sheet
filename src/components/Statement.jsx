@@ -9,8 +9,13 @@ export default function Statement() {
 
   const onSnapshot = () => {
     actions.saveSnapshot();
-    toast(fx.t('Snapshot saved for today', 'บันทึกสแนปช็อตวันนี้แล้ว'));
+    toast(fx.t('Snapshot saved — it now appears in "Net worth over time" below.', 'บันทึกสแนปช็อตแล้ว ดูได้ที่ "ความมั่งคั่งสุทธิตามเวลา" ด้านล่าง'));
   };
+
+  const lastSnapshot = S.snapshots.map(s => s.date).sort().pop();
+  const snapshotHint = lastSnapshot
+    ? fx.t(`Last saved ${fx.fdate(lastSnapshot)}`, `บันทึกล่าสุด ${fx.fdate(lastSnapshot)}`)
+    : fx.t('Not saved yet', 'ยังไม่ได้บันทึก');
 
   const assetGroups = ['liquid', 'invest', 'personal'].map(g => {
     const cats = ACATS.filter(c => c.g === g && C.byCat[c.k]);
@@ -64,7 +69,17 @@ export default function Statement() {
           <h2 id="stmtH">{fx.t('Statement of financial position', 'งบแสดงฐานะการเงิน')}</h2>
           <span className="sub">{S.owner ? S.owner + ' · ' : ''}{fx.t('As of', 'ณ วันที่')} {fx.fdate(S.asOf || TODAY)} · {S.currency}</span>
         </div>
-        <button type="button" className="btn" onClick={onSnapshot}>{fx.t('Save snapshot', 'บันทึกสแนปช็อต')}</button>
+        <div className="toolbar" style={{ justifyContent: 'flex-end' }}>
+          <span className="sub">{snapshotHint}</span>
+          <button
+            type="button"
+            className="btn"
+            onClick={onSnapshot}
+            title={fx.t('Records today’s total assets and liabilities so you can track your net worth trend over time.', 'บันทึกสินทรัพย์และหนี้สินรวมของวันนี้ เพื่อใช้ติดตามแนวโน้มความมั่งคั่งสุทธิ')}
+          >
+            {fx.t('Save snapshot', 'บันทึกสแนปช็อต')}
+          </button>
+        </div>
       </div>
       <div className="stmt">
         <table>

@@ -3,42 +3,43 @@ body { margin: 0; }
 [hidden] { display: none !important; }
 
 /* ---------- Design tokens ----------
-   A minimal, financial-services palette: cool neutral greys for structure,
-   a single confident emerald accent for brand/growth, and standard
-   good/warn/bad semantics so the ratio and suggestion colors stay legible. */
+   A modern, minimal palette aimed at a 20-40 audience: a warm near-white
+   background (not stark grey), a confident indigo-violet brand accent in
+   place of the traditional bank-green, and standard good/warn/bad
+   semantics so the ratio and suggestion colors stay legible. */
 :root {
-  --bg: #F6F7F9;
+  --bg: #F8F7FC;
   --surface: #FFFFFF;
-  --sunken: #EEF1F3;
-  --ink: #121826;
-  --muted: #5B6675;
-  --line: #E2E6EA;
-  --accent: #0C7A5C;
+  --sunken: #F0EEF9;
+  --ink: #16141F;
+  --muted: #666380;
+  --line: #E6E3F1;
+  --accent: #6D5EF5;
   --accent-ink: #FFFFFF;
-  --accent-soft: #E3F3EC;
-  --good: #1A8754; --good-soft: #E6F5EC;
-  --warn: #B3740E; --warn-soft: #FBF0DC;
-  --bad: #C2362A;  --bad-soft: #FBE8E6;
-  --c-liquid: #3D7DD8;
-  --c-invest: #0C7A5C;
-  --c-personal: #BD8A3E;
-  --c-debt: #C2503C;
+  --accent-soft: #EEEBFD;
+  --good: #16A34A; --good-soft: #E6F6EB;
+  --warn: #D97706; --warn-soft: #FCEEDA;
+  --bad: #E11D48;  --bad-soft: #FCE4EA;
+  --c-liquid: #3B82F6;
+  --c-invest: #0D9488;
+  --c-personal: #F59E0B;
+  --c-debt: #F43F5E;
   --font: "IBM Plex Sans Thai", "Noto Sans Thai", "Leelawadee UI", Tahoma, system-ui, sans-serif;
-  --r: 12px;
-  --shadow: 0 1px 2px rgba(18,24,38,.05), 0 6px 20px rgba(18,24,38,.05);
+  --r: 14px;
+  --shadow: 0 1px 2px rgba(22,20,40,.04), 0 8px 24px rgba(22,20,40,.06);
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #0D1117; --surface: #151B23; --sunken: #10151B; --ink: #E7EBF0; --muted: #96A1AE; --line: #262E38;
-  --accent: #3DD6A5; --accent-ink: #06231C; --accent-soft: #15302A;
-  --good: #52D493; --good-soft: #14291F; --warn: #E6B454; --warn-soft: #2C2414; --bad: #F0796A; --bad-soft: #321A16;
-  --c-liquid: #6FA6EA; --c-invest: #3DD6A5; --c-personal: #D8B47D; --c-debt: #E38A74;
-  --shadow: 0 1px 2px rgba(0,0,0,.35); color-scheme: dark; } }
+  --bg: #0E0C16; --surface: #181522; --sunken: #13111C; --ink: #EDEBF7; --muted: #A09DB8; --line: #2B2740;
+  --accent: #8E7FFF; --accent-ink: #15102B; --accent-soft: #221D3A;
+  --good: #4ADE80; --good-soft: #163324; --warn: #FBBF66; --warn-soft: #332411; --bad: #FB7185; --bad-soft: #341823;
+  --c-liquid: #7CA8FB; --c-invest: #3FC6B8; --c-personal: #F6BC5C; --c-debt: #FB7C94;
+  --shadow: 0 1px 2px rgba(0,0,0,.4); color-scheme: dark; } }
 :root[data-theme="dark"] {
-  --bg: #0D1117; --surface: #151B23; --sunken: #10151B; --ink: #E7EBF0; --muted: #96A1AE; --line: #262E38;
-  --accent: #3DD6A5; --accent-ink: #06231C; --accent-soft: #15302A;
-  --good: #52D493; --good-soft: #14291F; --warn: #E6B454; --warn-soft: #2C2414; --bad: #F0796A; --bad-soft: #321A16;
-  --c-liquid: #6FA6EA; --c-invest: #3DD6A5; --c-personal: #D8B47D; --c-debt: #E38A74;
-  --shadow: 0 1px 2px rgba(0,0,0,.35); color-scheme: dark; }
+  --bg: #0E0C16; --surface: #181522; --sunken: #13111C; --ink: #EDEBF7; --muted: #A09DB8; --line: #2B2740;
+  --accent: #8E7FFF; --accent-ink: #15102B; --accent-soft: #221D3A;
+  --good: #4ADE80; --good-soft: #163324; --warn: #FBBF66; --warn-soft: #332411; --bad: #FB7185; --bad-soft: #341823;
+  --c-liquid: #7CA8FB; --c-invest: #3FC6B8; --c-personal: #F6BC5C; --c-debt: #FB7C94;
+  --shadow: 0 1px 2px rgba(0,0,0,.4); color-scheme: dark; }
 
 * { box-sizing: border-box; }
 body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased; }

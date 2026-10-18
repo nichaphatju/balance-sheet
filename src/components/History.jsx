@@ -8,7 +8,7 @@ export default function History() {
 
   const onSnapshot = () => {
     actions.saveSnapshot();
-    toast(fx.t('Snapshot saved for today', 'บันทึกสแนปช็อตวันนี้แล้ว'));
+    toast(fx.t('Snapshot saved — it now appears in "Net worth over time" below.', 'บันทึกสแนปช็อตแล้ว ดูได้ที่ "ความมั่งคั่งสุทธิตามเวลา" ด้านล่าง'));
   };
 
   const pts = S.snapshots.map(s => ({ d: s.date, v: s.a - s.l })).filter(p => p.d !== TODAY);
@@ -16,12 +16,20 @@ export default function History() {
   pts.sort((a, b) => a.d.localeCompare(b.d));
 
   if (pts.length < 2) {
+    const savedToday = S.snapshots.some(s => s.date === TODAY);
     return (
       <section className="card">
         <div className="card-h"><h2>{fx.t('Net worth over time', 'ความมั่งคั่งสุทธิตามเวลา')}</h2></div>
         <div className="empty">
-          {fx.t('Save a snapshot now and again in a few months to see your progress.', 'บันทึกสแนปช็อตวันนี้ และอีกครั้งในอีกไม่กี่เดือน เพื่อดูความคืบหน้า')}
-          <button type="button" className="btn" onClick={onSnapshot}>{fx.t('Save snapshot', 'บันทึกสแนปช็อต')}</button>
+          {savedToday
+            ? <>
+                <span>✓ {fx.t("Snapshot saved for today. This chart will show your trend once you save another — try again in a few months.", "บันทึกสแนปช็อตของวันนี้แล้ว กราฟนี้จะแสดงแนวโน้มเมื่อคุณบันทึกอีกครั้ง ลองใหม่ในอีกไม่กี่เดือน")}</span>
+                <button type="button" className="btn" onClick={onSnapshot}>{fx.t('Update today’s snapshot', 'อัปเดตสแนปช็อตวันนี้')}</button>
+              </>
+            : <>
+                {fx.t('A snapshot records today’s total assets and liabilities. Save one now and again in a few months to see your net worth trend here.', 'สแนปช็อตจะบันทึกสินทรัพย์และหนี้สินรวมของวันนี้ บันทึกไว้ตอนนี้ และอีกครั้งในอีกไม่กี่เดือน เพื่อดูแนวโน้มความมั่งคั่งสุทธิที่นี่')}
+                <button type="button" className="btn" onClick={onSnapshot}>{fx.t('Save snapshot', 'บันทึกสแนปช็อต')}</button>
+              </>}
         </div>
       </section>
     );

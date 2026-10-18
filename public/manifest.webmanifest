@@ -4,7 +4,7 @@
   "description": "Track assets, liabilities and net worth, and see the ratios that matter for your financial health.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F7F8FA",
-  "theme_color": "#0C7A5C",
+  "background_color": "#F8F7FC",
+  "theme_color": "#6D5EF5",
   "icons": [{ "src": "/icon.svg", "type": "image/svg+xml", "sizes": "any" }]
 }
